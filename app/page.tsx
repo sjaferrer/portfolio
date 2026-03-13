@@ -37,7 +37,7 @@ export default function Page() {
           </h1>
 
           <nav className="hidden md:flex space-x-6 text-gray-300 font-medium">
-            {['hero','about','experience','skills','projects'].map((id)=>(
+            {['Home','about','experience','skills','projects'].map((id)=>(
               <a
                 key={id}
                 href={`#${id}`}
@@ -60,7 +60,7 @@ export default function Page() {
         {menuOpen && (
           <nav className="md:hidden backdrop-blur-xl bg-black/40 border-t border-white/10">
             <ul className="flex flex-col p-4 space-y-3">
-              {['hero','about','experience','skills','projects','contact'].map((id) => (
+              {['Home','about','experience','skills','projects'].map((id) => (
                 <li key={id}>
                   <a
                     href={`#${id}`}
@@ -77,12 +77,12 @@ export default function Page() {
 
       </header>
 
-{/* HERO */}
+{/* Home */}
 <section
-id="hero"
+id="Home"
 className={`relative flex flex-col justify-center items-center text-center min-h-screen ${sectionPadding}`}
 >
-{/* HERO section lights */}
+{/* Home section lights */}
 <div className="absolute w-[650px] h-[650px] bg-blue-500/20 blur-[160px] rounded-full -top-20 -left-20 pointer-events-none"></div>
 <div className="absolute w-[500px] h-[500px] bg-purple-500/20 blur-[150px] rounded-full bottom-0 right-0 pointer-events-none"></div>
 
@@ -347,3 +347,6 @@ className={`relative flex flex-col justify-center items-center text-center min-h
 </div>
 );
 }
+// git add .
+// git commit -m "Update portfolio"
+// git push

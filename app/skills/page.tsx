@@ -6,6 +6,9 @@ const racingSansOne = Racing_Sans_One({
   subsets: ['latin'],
   weight: '400',
 });
+type SkillsPageProps = {
+  darkMode: boolean;
+};
 
 const skillGroups = [
   {
@@ -23,7 +26,7 @@ const skillGroups = [
     category: 'Frameworks & Libraries',
     skills: [
       { name: 'Next.js', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg', desc: 'Server-side React framework' },
-      { name: 'Node.js', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg', desc: 'Backend runtime' },
+      { name: 'Node.js', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original-wordmark.svg', desc: 'Backend runtime' },
       { name: 'Tailwind CSS', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg', desc: 'Utility-first CSS framework' },
       { name: 'Bootstrap', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bootstrap/bootstrap-plain.svg', desc: 'CSS framework' },
       { name: 'jQuery', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jquery/jquery-plain.svg', desc: 'Legacy frontend library' },
@@ -51,7 +54,7 @@ const skillGroups = [
   },
 ];
 
-export default function SkillsPage() {
+export default function SkillsPage({ darkMode }: SkillsPageProps) {
   const sectionPadding = 'py-32 px-4 sm:px-6 md:px-0';
 
   return (
@@ -59,22 +62,26 @@ export default function SkillsPage() {
       id="skills"
       className={`relative z-10 container mx-auto ${sectionPadding} flex flex-col gap-16`}
     >
+      {/* Section Header */}
       <h2 className="text-4xl md:text-5xl font-bold mb-16 text-center bg-gradient-to-r from-blue-400 via-cyan-300 to-purple-400 bg-clip-text text-transparent">
         Skills
       </h2>
 
+      {/* Skill Groups */}
       <div className="flex flex-col sm:flex-row flex-wrap gap-6 justify-center items-stretch">
         {skillGroups.map((group, idx) => (
           <div
             key={idx}
-            className="glass-card p-6 rounded-2xl w-full sm:w-[45%] md:w-[30%] lg:w-[22%] flex-shrink-0 flex flex-col"
+            className="p-6 rounded-2xl w-full sm:w-[45%] md:w-[30%] lg:w-[22%] flex-shrink-0 flex flex-col bg-transparent backdrop-blur-sm"
           >
-            <h3 className="md:text-lg font-semibold text-foreground mb-4">{group.category}</h3>
+            <h3 className={`${darkMode ? 'text-gray-300' : 'text-gray-800'} md:text-lg font-semibold mb-4`}>
+              {group.category}
+            </h3>
             <div className="space-y-2">
               {group.skills.map((skill, sidx) => (
                 <div
                   key={sidx}
-                  className="flex items-center justify-between py-1.5 px-2 rounded-md bg-secondary/30 hover:bg-primary/10 transition-colors duration-200"
+                  className="flex items-center justify-between py-1.5 px-2 rounded-md bg-transparent backdrop-blur-sm hover:bg-white/5 dark:hover:bg-white/10 transition-all duration-200"
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     {skill.icon ? (
@@ -91,8 +98,12 @@ export default function SkillsPage() {
                       </div>
                     )}
                     <div className="flex flex-col truncate">
-                      <span className="font-medium text-foreground text-sm">{skill.name}</span>
-                      <span className="text-xs text-muted-foreground truncate">{skill.desc}</span>
+                      <span className={`${darkMode ? 'text-gray-300' : 'text-gray-800'} font-medium text-sm`}>
+                        {skill.name}
+                      </span>
+                      <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-xs truncate`}>
+                        {skill.desc}
+                      </span>
                     </div>
                   </div>
                 </div>

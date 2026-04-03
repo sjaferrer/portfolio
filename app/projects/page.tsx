@@ -33,7 +33,7 @@ export default function ProjectsPage({ darkMode }: ProjectsPageProps) {
       </>,
     ],
     [
-      'Human Resource Information Systems(HRIS)',
+      'Human Resource Information Systems (HRIS)',
       <>
         Human Resource Information System modules:
         <ul className={`list-disc list-inside mt-2 ml-4 space-y-1 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>

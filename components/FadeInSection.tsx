@@ -15,11 +15,10 @@ export default function FadeInSection({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Trigger animation whenever the element is in viewport
         if (entry.isIntersecting) {
           setIsVisible(true);
         } else {
-          setIsVisible(false); // reset if you want fade out when leaving viewport
+          setIsVisible(false);
         }
       },
       {

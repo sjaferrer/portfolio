@@ -41,16 +41,17 @@ export default function ExperiencePage({ darkMode }: ExperiencePageProps) {
               </h4>
 
               <p className={`text-sm md:text-base mb-4 leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-                Developed full-stack applications. Optimized internal processes, integrated biometric systems, and designed scalable databases.
+                Developed and maintained HR systems covering employee records, attendance tracking, overtime/undertime computation, job orders, travel orders, scheduling/calendar, service providers, and HR master data management.
               </p>
 
               <h5 className={`text-sm font-semibold mb-2 flex items-center gap-2 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                 Key Achievements
               </h5>
               <ul className={`list-disc list-inside space-y-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-                <li>Reduced internal process time by 20% through web application automation</li>
-                <li>Optimized front-end and back-end performance for better responsiveness</li>
-                <li>Integrated biometric attendance systems</li>
+                <li>Built ERP business modules including Procure-to-Pay (P2P), warehouse inventory management, asset management, and centralized master data architecture.</li>
+                <li>Designed and implemented user management, role-based access control (RBAC), and approval workflows.</li>
+                <li>Created custom reports, dashboards, and analytics using database queries to support HR and business decisions.</li>
+                <li>Optimized backend logic, database structures, and system configurations for better performance, scalability, and reliability.</li>
               </ul>
             </div>
 
@@ -59,24 +60,24 @@ export default function ExperiencePage({ darkMode }: ExperiencePageProps) {
               <div className="absolute -left-4 top-12 w-8 h-0.5 bg-gradient-to-r from-blue-400/50 to-transparent hidden sm:block"></div>
 
               <h3 className={`text-lg md:text-xl font-bold mb-1 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                System Analyst / Programmer
+                System Analyst / Programmer, Supervisor
               </h3>
               <h4 className={`text-base md:text-lg font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                 Lapanday Foods Corporation
               </h4>
 
               <p className={`text-sm md:text-base mb-4 leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-                Developed and maintained the HRIS system, documenting processes and participating in the full SDLC to deliver full-stack solutions for business operations.
+                Led the development of the Human Resource Information System (HRIS) supporting employee records, Personal Data Sheet (PDS), workforce administration, employee lifecycle management, leave, travel orders, attendance/timesheet tracking, and HR scheduling workflows.
               </p>
 
               <h5 className={`text-sm font-semibold mb-2 flex items-center gap-2 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                 Key Achievements
               </h5>
               <ul className={`list-disc list-inside space-y-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-                <li>Delivered efficient full-stack HRIS solutions</li>
-                <li>Documented system designs and maintained technical specifications</li>
-                <li>Participated in testing, debugging, and process improvement initiatives</li>
-                <li>Engaged in all phases of SDLC to enhance workflows</li>
+                <li>Developed talent acquisition solutions including applicant tracking, applicant portal kiosk, recruitment workflow automation, and monitoring dashboards.</li>
+                <li>Built dashboards for applicant monitoring, position tracking, department reporting, and recruitment stage visualization.</li>
+                <li>Designed centralized HR master data structures and documented system design, source code, and functionality for future enhancements.</li>
+                <li>Participated in all phases of the Software Development Life Cycle (SDLC), including development, testing, quality assurance, debugging, issue resolution, performance monitoring, and system optimization.</li>
               </ul>
             </div>
           </div>

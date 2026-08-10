@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 export default function FadeInSection({
   children,
@@ -24,7 +24,7 @@ export default function FadeInSection({
       },
       {
         threshold: 0.15,
-      }
+      },
     );
 
     if (currentRef) observer.observe(currentRef);
@@ -39,7 +39,7 @@ export default function FadeInSection({
       ref={ref}
       className={`
         transform transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]
-        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}
+        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"}
       `}
     >
       {children}

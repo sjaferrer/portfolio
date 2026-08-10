@@ -2,25 +2,49 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --foreground: #111827; /* gray-900 */
+  --accent: #0a66c2; /* LinkedIn blue */
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
+
+a {
+  color: var(--accent);
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid rgba(17, 24, 39, 0.06); /* subtle border */
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+:root {
+  --sap-blue: #0a6ed1;
+  --sap-blue-dark: #354a5f;
+
+  --sap-background: #f5f6f7;
+  --sap-card: #ffffff;
+
+  --sap-text: #32363a;
+  --sap-muted: #6a6d70;
+  --sap-border: #d9d9d9;
+
+  --sap-success: #107e3e;
+  --sap-warning: #e9730c;
+  --sap-error: #bb0000;
+}
+/* [data-next-badge="true"] {
+  display: none !important;
+} */

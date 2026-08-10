@@ -322,7 +322,7 @@ export default function HomePage() {
               {/* Email */}
 
               <a
-                href={`mailto:${process.env.NEXT_PUBLIC_EMAIL}`}
+                href="mailto:sjaferrer1@gmail.com"
                 aria-label="Email"
                 className="
         flex
@@ -347,7 +347,7 @@ export default function HomePage() {
               {/* GitHub */}
 
               <a
-                href={process.env.NEXT_PUBLIC_GITHUB_URL}
+                href="https://github.com/sjaferrer"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
@@ -375,7 +375,7 @@ export default function HomePage() {
               {/* LinkedIn */}
 
               <a
-                href={process.env.NEXT_PUBLIC_LINKEDIN_URL}
+                href="https://www.linkedin.com/in/stephen-john-f-964557318/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
@@ -856,7 +856,7 @@ function HomeModule({
           >
             {/* Email */}
             <a
-              href={`mailto:${process.env.NEXT_PUBLIC_EMAIL}`}
+              href="mailto:sjaferrer1@gmail.com"
               className="
       flex
       items-center
@@ -888,7 +888,7 @@ function HomeModule({
 
             {/* GitHub */}
             <a
-              href={process.env.NEXT_PUBLIC_GITHUB_URL}
+              href="https://github.com/sjaferrer"
               target="_blank"
               rel="noopener noreferrer"
               className="
@@ -917,7 +917,7 @@ function HomeModule({
 
             {/* LinkedIn */}
             <a
-              href={process.env.NEXT_PUBLIC_LINKEDIN_URL}
+              href="https://www.linkedin.com/in/stephen-john-f-964557318/"
               target="_blank"
               rel="noopener noreferrer"
               className="

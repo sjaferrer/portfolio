@@ -1049,7 +1049,7 @@ function AboutModule({ searchQuery }: { searchQuery: string }) {
 
           <InfoItem
             label="Location"
-            value="Davao, Philippines"
+            value="Davao City, Philippines"
             searchQuery={searchQuery}
           />
 

@@ -174,15 +174,18 @@ export default function HomePage() {
           <div>
             <div
               className="
-                text-[22px]
-                font-extrabold
-                tracking-[-0.055em]
-                leading-none
-                text-[#171717]
-                select-none
-            "
+            text-[22px]
+            font-extrabold
+            tracking-[-0.055em]
+            leading-none
+            text-[#171717]
+            select-none
+          "
             >
-              Stephen<span className="text-[#737373]"> J.</span>
+              <span className="inline-block text-[30px] leading-[0.7] align-[-0.08em]">
+                S
+              </span>
+              tephen<span className="text-[#737373]"> J.</span>
             </div>
           </div>
           <button

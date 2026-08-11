@@ -182,10 +182,7 @@ export default function HomePage() {
             select-none
           "
             >
-              <span className="inline-block text-[30px] leading-[0.7] align-[-0.08em]">
-                S
-              </span>
-              tephen<span className="text-[#737373]"> J.</span>
+              STEPHEN <span className="text-[#737373]"> J.</span>
             </div>
           </div>
           <button
@@ -417,7 +414,8 @@ export default function HomePage() {
           "
         >
           <div className="text-xs text-[#a3a3a3]">
-           © {new Date().getFullYear()} Stephen J. — Designed and developed with care. All rights reserved.
+            © {new Date().getFullYear()} Stephen J. — Designed and developed
+            with care. All rights reserved.
           </div>
         </div>
       </aside>

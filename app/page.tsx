@@ -417,8 +417,7 @@ export default function HomePage() {
           "
         >
           <div className="text-xs text-[#a3a3a3]">
-            © 2026 Stephen J. — Designed and developed with care. All rights
-            reserved.
+           © {new Date().getFullYear()} Stephen J. — Designed and developed with care. All rights reserved.
           </div>
         </div>
       </aside>

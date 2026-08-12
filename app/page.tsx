@@ -20,25 +20,25 @@ const modules: {
   {
     id: "about",
     label: "About",
-    description: "Professional profile",
+    description: "Professional Profile",
     icon: "◎",
   },
   {
     id: "experience",
     label: "Experience",
-    description: "Work history",
+    description: "Work History",
     icon: "▣",
   },
   {
     id: "projects",
     label: "Projects",
-    description: "Selected work",
+    description: "Selected Work",
     icon: "◫",
   },
   {
     id: "skills",
     label: "Skills",
-    description: "Technologies",
+    description: "Technologies & Tools",
     icon: "◆",
   },
 ];
@@ -953,113 +953,120 @@ function HomeModule({
 /* ============================================================
    ABOUT MODULE
 ============================================================ */
-
 function AboutModule({ searchQuery }: { searchQuery: string }) {
   return (
-    <div
-      className="
-        grid
-        grid-cols-1
-        lg:grid-cols-3
-
-        gap-10
-        lg:gap-16
-      "
-    >
-      <div className="lg:col-span-2">
-        <SectionHeading
-          eyebrow="Profile"
-          title="Professional Summary"
-          searchQuery={searchQuery}
-        />
-
-        <div
-          className="
-            mt-8
-
-            space-y-6
-
-            text-sm
-            sm:text-base
-
-            leading-7
-            sm:leading-8
-
-            text-[#525252]
-          "
-        >
-          <p>
-            <HighlightText
-              text="I'm a Full Stack Developer specializing in enterprise application development with experience in Human Resource Information Systems (HRIS), Enterprise Resource Planning (ERP), and business process automation."
-              query={searchQuery}
+    <div className="space-y-16 sm:space-y-20">
+      {/* Profile */}
+      <section className="pt-4 sm:pt-6 md:pt-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16">
+          {/* Summary */}
+          <div className="lg:col-span-2">
+            <SectionHeading
+              eyebrow="Profile"
+              title="Professional Summary"
+              searchQuery={searchQuery}
             />
-          </p>
 
-          <p>
-            <HighlightText
-              text="My work involves translating business requirements into practical software solutions. I work across frontend interfaces, backend services, database architecture, APIs, reporting, and system workflows."
-              query={searchQuery}
-            />
-          </p>
+            <div
+              className="
+                mt-8
+                space-y-6
+                max-w-3xl
+                text-sm
+                leading-7
+                text-[#525252]
+                sm:text-base
+                sm:leading-8
+              "
+            >
+              <p>
+                <HighlightText
+                  text="I'm a Full Stack Developer specializing in enterprise application development with experience in Human Resource Information Systems (HRIS), Enterprise Resource Planning (ERP), and business process automation."
+                  query={searchQuery}
+                />
+              </p>
 
-          <p>
-            <HighlightText
-              text="I enjoy understanding how a business operates and then designing software that makes those processes simpler, faster, and more reliable."
-              query={searchQuery}
-            />
-          </p>
+              <p>
+                <HighlightText
+                  text="My work involves translating business requirements into practical software solutions. I work across frontend interfaces, backend services, database architecture, APIs, reporting, and system workflows."
+                  query={searchQuery}
+                />
+              </p>
+
+              <p>
+                <HighlightText
+                  text="I enjoy understanding how a business operates and then designing software that makes those processes simpler, faster, and more reliable."
+                  query={searchQuery}
+                />
+              </p>
+            </div>
+          </div>
+
+          {/* Basic Information */}
+          <div
+            className="
+              border-t
+              lg:border-t-0
+              lg:border-l
+
+              border-[#e5e5e5]
+
+              pt-8
+              lg:pt-0
+              lg:pl-8
+            "
+          >
+            <div
+              className="
+                text-xs
+                uppercase
+                tracking-[0.18em]
+                text-[#737373]
+              "
+            >
+              Basic Information
+            </div>
+
+            <div
+              className="
+                mt-6
+
+                grid
+                grid-cols-1
+                sm:grid-cols-2
+                lg:grid-cols-1
+
+                gap-x-8
+                gap-y-7
+              "
+            >
+              <InfoItem
+                label="Name"
+                value="Stephen J."
+                searchQuery={searchQuery}
+              />
+
+              <InfoItem
+                label="Position"
+                value="Full Stack Developer"
+                searchQuery={searchQuery}
+              />
+
+              <InfoItem
+                label="Location"
+                value="Davao City, Philippines"
+                searchQuery={searchQuery}
+              />
+
+              <InfoItem
+                label="Focus"
+                value="Enterprise Applications"
+                searchQuery={searchQuery}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Profile Information */}
-
-      <div
-        className="
-          border-t
-          lg:border-t-0
-          lg:border-l
-
-          border-[#e5e5e5]
-
-          pt-8
-          lg:pt-0
-
-          lg:pl-8
-        "
-      >
-        <div
-          className="
-            text-xs
-            uppercase
-            tracking-[0.18em]
-            text-[#a3a3a3]
-          "
-        >
-          Profile
-        </div>
-
-        <div className="mt-6 space-y-6">
-          <InfoItem label="Name" value="Stephen J." searchQuery={searchQuery} />
-
-          <InfoItem
-            label="Position"
-            value="Full Stack Developer"
-            searchQuery={searchQuery}
-          />
-
-          <InfoItem
-            label="Location"
-            value="Davao City, Philippines"
-            searchQuery={searchQuery}
-          />
-
-          <InfoItem
-            label="Focus"
-            value="Enterprise Applications"
-            searchQuery={searchQuery}
-          />
-        </div>
-      </div>
+      </section>
     </div>
   );
 }
@@ -1372,12 +1379,19 @@ function SkillsModule({ searchQuery }: { searchQuery: string }) {
 
               <p
                 className="
-                    text-xs
-                    text-[#a3a3a3]
-                    mt-1
-                  "
+                  text-xs
+                  text-[#a3a3a3]
+                  mt-1
+                "
               >
-                {items.length} technologies
+                {items.length}{" "}
+                {category === "Tools"
+                  ? items.length === 1
+                    ? "Tool"
+                    : "Tools"
+                  : items.length === 1
+                    ? "Technology"
+                    : "Technologies"}
               </p>
             </div>
 

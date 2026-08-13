@@ -7,10 +7,8 @@ type Module = "home" | "about" | "experience" | "projects" | "skills";
 
 type Skill = {
   name: string;
-  short: string;
-  level?: string;
+  icon: string;
 };
-
 const modules: {
   id: Module;
   label: string;
@@ -54,33 +52,36 @@ const modules: {
     icon: "◆",
   },
 ];
-
 const skills: Record<string, Skill[]> = {
   Languages: [
-    { name: "C#", short: "C#", level: "Primary" },
-    { name: "JavaScript", short: "JS", level: "Advanced" },
-    { name: "TypeScript", short: "TS", level: "Advanced" },
-    { name: "HTML", short: "HTML", level: "Advanced" },
-    { name: "CSS", short: "CSS", level: "Advanced" },
+    { name: "C#", icon: "devicon-csharp-plain colored" },
+    { name: "JavaScript", icon: "devicon-javascript-plain colored" },
+    { name: "TypeScript", icon: "devicon-typescript-plain colored" },
+    { name: "HTML", icon: "devicon-html5-plain colored" },
+    { name: "CSS", icon: "devicon-css3-plain colored" },
   ],
+
   Frameworks: [
-    { name: "ASP.NET", short: ".NET", level: "Primary" },
-    { name: "Bootstrap", short: "BS", level: "Experienced" },
-    { name: "Tailwind CSS", short: "TW", level: "Advanced" },
-    { name: "jQuery", short: "$", level: "Experienced" },
-    { name: "Next.js", short: "NX", level: "Advanced" },
-    { name: "Node.js", short: "JS", level: "Experienced" },
+    { name: "ASP.NET", icon: "devicon-dot-net-plain-wordmark" },
+    { name: "Next.js", icon: "devicon-nextjs-plain" },
+    { name: "Node.js", icon: "devicon-nodejs-plain-wordmark colored" },
+    { name: "Bootstrap", icon: "devicon-bootstrap-plain colored" },
+    { name: "Tailwind CSS", icon: "devicon-tailwindcss-original colored" },
+    { name: "jQuery", icon: "devicon-jquery-plain colored" },
   ],
-  Database: [{ name: "MS SQL Server", short: "SQL", level: "Primary" }],
+
+  Database: [
+    { name: "MS SQL Server", icon: "devicon-microsoftsqlserver-plain colored" },
+  ],
+
   Tools: [
-    { name: "Git", short: "GIT", level: "Advanced" },
-    { name: "GitHub", short: "GH", level: "Advanced" },
-    { name: "VS Code", short: "VS", level: "Advanced" },
-    { name: "Visual Studio", short: "VS", level: "Advanced" },
-    { name: "Postman", short: "API", level: "Experienced" },
+    { name: "Git", icon: "devicon-git-plain colored" },
+    { name: "GitHub", icon: "devicon-github-original colored" },
+    { name: "VS Code", icon: "devicon-vscode-plain colored" },
+    { name: "Visual Studio", icon: "devicon-visualstudio-plain colored" },
+    { name: "Postman", icon: "devicon-postman-plain colored" },
   ],
 };
-
 const focusAreas = [
   "Enterprise Application Development",
   "System Analysis",
@@ -252,8 +253,8 @@ export default function HomePage() {
   );
 
   /* ============================================================
-     INITIAL PRELOADER
-  ============================================================ */
+   INITIAL PRELOADER
+============================================================ */
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -263,6 +264,32 @@ export default function HomePage() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  /* ============================================================
+   RESET PAGE POSITION ON LOAD / REFRESH
+============================================================ */
+
+  useEffect(() => {
+    // Prevent the browser from restoring the previous scroll position.
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    // Always start at the top / Home section.
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    });
+
+    setActiveModule("home");
+    setSearchQuery("");
+
+    return () => {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
+      }
+    };
+  }, []);
   /* ============================================================
      ESC = COLLAPSE / EXPAND SIDEBAR
   ============================================================ */
@@ -456,18 +483,16 @@ export default function HomePage() {
           PAGE
       ======================================================== */}
 
-      <div className="min-h-screen bg-[#f8f8f6] text-[#171717] selection:bg-[#171717] selection:text-white dark:bg-[#111111] dark:text-[#f5f5f5] dark:selection:bg-white dark:selection:text-[#111111]">
+      <div className="min-h-screen overflow-anchor-none bg-[#f8f8f6] text-[#171717] selection:bg-[#171717] selection:text-white dark:bg-[#111111] dark:text-[#f5f5f5] dark:selection:bg-white dark:selection:text-[#111111]">
+        {" "}
         <SkipLink />
-
         <Header
           activeModule={activeModuleData?.label || "Home"}
           onMenuClick={() => setMobileSidebarOpen(true)}
           onNavigate={navigate}
           desktopSidebarCollapsed={desktopSidebarCollapsed}
         />
-
         {/* BACKGROUND GRID */}
-
         <div
           aria-hidden="true"
           className="pointer-events-none fixed inset-0 -z-10 opacity-[0.025] dark:opacity-[0.04] [--grid-color:#171717] dark:[--grid-color:#ffffff]"
@@ -477,9 +502,7 @@ export default function HomePage() {
             backgroundSize: "48px 48px",
           }}
         />
-
         {/* MOBILE OVERLAY */}
-
         {mobileSidebarOpen && (
           <button
             type="button"
@@ -488,11 +511,9 @@ export default function HomePage() {
             onClick={() => setMobileSidebarOpen(false)}
           />
         )}
-
         {/* ======================================================
             SIDEBAR
         ====================================================== */}
-
         <aside
           aria-label="Primary navigation"
           className={[
@@ -886,11 +907,9 @@ export default function HomePage() {
             </div>
           )}
         </aside>
-
         {/* ========================================================
             MAIN CONTENT
         ======================================================== */}
-
         <main
           id="main-content"
           className={[
@@ -937,10 +956,74 @@ export default function HomePage() {
           >
             <SkillsModule searchQuery={searchQuery} />
           </SectionShell>
+
+          {/* MOBILE FOOTER */}
+          <footer className="border-t border-[#e3e3df] bg-[#f8f8f6] px-5 py-12 dark:border-[#292929] dark:bg-[#111111] lg:hidden">
+            <div className="mx-auto w-full max-w-[1180px]">
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#999995] dark:text-[#666]">
+                Connect
+              </div>
+
+              <div className="mt-5 flex flex-col gap-2">
+                <a
+                  href="mailto:sjaferrer1@gmail.com"
+                  className="group flex min-h-12 items-center justify-between rounded-xl border border-[#e2e2de] bg-white px-4 text-sm font-bold text-[#40403d] transition-all duration-200 hover:border-[#d5d5d1] hover:bg-[#f1f1ee] dark:border-[#303030] dark:bg-[#1b1b1b] dark:text-[#ddd] dark:hover:border-[#404040] dark:hover:bg-[#222]"
+                >
+                  <span className="flex items-center gap-3">
+                    <EmailIcon />
+                    Email
+                  </span>
+                  <span className="text-[#aaa]">→</span>
+                </a>
+
+                <a
+                  href="https://github.com/sjaferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex min-h-12 items-center justify-between rounded-xl border border-[#e2e2de] bg-white px-4 text-sm font-bold text-[#40403d] transition-all duration-200 hover:border-[#d5d5d1] hover:bg-[#f1f1ee] dark:border-[#303030] dark:bg-[#1b1b1b] dark:text-[#ddd] dark:hover:border-[#404040] dark:hover:bg-[#222]"
+                >
+                  <span className="flex items-center gap-3">
+                    <GitHubIcon />
+                    GitHub
+                  </span>
+                  <span className="text-[#aaa]">↗</span>
+                </a>
+
+                <a
+                  href="https://www.linkedin.com/in/stephen-john-f-964557318/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex min-h-12 items-center justify-between rounded-xl border border-[#e2e2de] bg-white px-4 text-sm font-bold text-[#40403d] transition-all duration-200 hover:border-[#d5d5d1] hover:bg-[#f1f1ee] dark:border-[#303030] dark:bg-[#1b1b1b] dark:text-[#ddd] dark:hover:border-[#404040] dark:hover:bg-[#222]"
+                >
+                  <span className="flex items-center gap-3">
+                    <LinkedInIcon />
+                    LinkedIn
+                  </span>
+                  <span className="text-[#aaa]">↗</span>
+                </a>
+              </div>
+
+              <div className="mt-10 border-t border-[#e3e3df] pt-6 dark:border-[#292929]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-semibold text-[#737373] dark:text-[#858585]">
+                      © {new Date().getFullYear()} Stephen J.
+                    </div>
+
+                    <div className="mt-1 text-[10px] text-[#aaa] dark:text-[#666]">
+                      Designed & developed with care.
+                    </div>
+                  </div>
+
+                  <span className="text-[10px] font-bold text-[#c1c1be] dark:text-[#555]">
+                    SJ
+                  </span>
+                </div>
+              </div>
+            </div>
+          </footer>
         </main>
-
         {/* RETURN TO TOP */}
-
         <button
           type="button"
           aria-label="Return to top"
@@ -1316,9 +1399,9 @@ function AboutModule({ searchQuery }: { searchQuery: string }) {
                 Basic information
               </div>
 
-              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
+              {/* <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
                 Available
-              </span>
+              </span> */}
             </div>
 
             <div className="mt-7 space-y-6">
@@ -1550,20 +1633,14 @@ function SkillsModule({ searchQuery }: { searchQuery: string }) {
           searchQuery={searchQuery}
         />
 
-        <div className="mt-8 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {focusAreas.map((skill, index) => (
-            <div
+        <div className="mt-8 flex flex-wrap gap-2">
+          {focusAreas.map((skill) => (
+            <span
               key={skill}
-              className="flex items-center gap-3 rounded-2xl border border-[#e2e2de] bg-white px-4 py-3.5 shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-[#cecec9] hover:shadow-md dark:border-[#303030] dark:bg-[#1b1b1b] dark:hover:border-[#444]"
+              className="rounded-full border border-[#dfdfda] bg-white px-3.5 py-2 text-sm font-semibold text-[#40403d] shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-[#c8c8c2] hover:shadow-md dark:border-[#333] dark:bg-[#1b1b1b] dark:text-[#ddd] dark:hover:border-[#444]"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f1f1ee] text-[9px] font-black text-[#73736f] dark:bg-[#292929] dark:text-[#999]">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-
-              <span className="text-sm font-semibold text-[#40403d] dark:text-[#ddd]">
-                <HighlightText text={skill} query={searchQuery} />
-              </span>
-            </div>
+              <HighlightText text={skill} query={searchQuery} />
+            </span>
           ))}
         </div>
       </section>
@@ -1774,26 +1851,20 @@ function SkillCategory({
         </div>
       </div>
 
-      <div className="divide-y divide-[#f0f0ec] dark:divide-[#292929]">
+      <div>
         {items.map((item) => (
           <div
             key={item.name}
-            className="flex items-center gap-3 px-5 py-4 transition-colors duration-200 hover:bg-[#fafaf8] dark:hover:bg-[#222]"
+            className="flex items-center gap-3 border-b border-[#f0f0ec] px-5 py-4 transition-colors duration-200 hover:bg-[#fafaf8] dark:border-[#292929] dark:hover:bg-[#222]"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1f1ee] text-[9px] font-black text-[#666661] dark:bg-[#2a2a2a] dark:text-[#aaa]">
-              {item.short}
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f1f1ee] dark:bg-[#2a2a2a]">
+              <i className={`${item.icon} text-xl`} aria-hidden="true" />
             </span>
 
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold text-[#40403d] dark:text-[#ddd]">
                 <HighlightText text={item.name} query={searchQuery} />
               </div>
-
-              {item.level && (
-                <div className="mt-0.5 text-[10px] font-medium text-[#aaa] dark:text-[#666]">
-                  {item.level}
-                </div>
-              )}
             </div>
           </div>
         ))}
@@ -2079,3 +2150,4 @@ function HighlightText({ text, query }: { text: string; query: string }) {
   );
 }
 //asssdd
+//asddee

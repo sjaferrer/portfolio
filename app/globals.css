@@ -48,3 +48,156 @@ a {
 /* [data-next-badge="true"] {
   display: none !important;
 } */
+/* ============================================================
+   SECTION / CARD MOTION
+============================================================ */
+
+@keyframes sectionReveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-reveal {
+  animation: sectionReveal 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.section-reveal-inner {
+  width: 100%;
+}
+
+/* Subtle card transition.
+   No exaggerated movement or scaling. */
+.ui-card {
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ui-card:hover {
+  border-color: #d6d6d1;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.045);
+}
+
+/* Only interactive elements receive a pointer cursor */
+button,
+a {
+  cursor: pointer;
+}
+
+/* Non-clickable cards/text stay with the normal cursor */
+.ui-card:not(button):not(a) {
+  cursor: default;
+}
+
+/* Respect accessibility preferences */
+@media (prefers-reduced-motion: reduce) {
+  .section-reveal {
+    animation: none;
+  }
+
+  .ui-card {
+    transition: none;
+  }
+}
+@custom-variant dark (&:where(.dark, .dark *));
+/* ============================================================
+   RADIAL THEME TRANSITION
+============================================================ */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/*
+ * Keep the old theme visible underneath.
+ */
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+/*
+ * The new theme starts as a tiny circle at the theme button
+ * and expands until it covers the entire viewport.
+ */
+::view-transition-new(root) {
+  z-index: 2;
+
+  clip-path: circle(0px at var(--theme-x) var(--theme-y));
+
+  animation: theme-radial-reveal 650ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes theme-radial-reveal {
+  from {
+    clip-path: circle(0px at var(--theme-x) var(--theme-y));
+  }
+
+  to {
+    clip-path: circle(var(--theme-radius) at var(--theme-x) var(--theme-y));
+  }
+}
+
+/*
+ * Respect reduced-motion accessibility settings.
+ */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms !important;
+  }
+}
+/* ============================================================
+   PRELOADER THEME
+   ------------------------------------------------------------
+   Uses the theme class immediately, without waiting for React.
+============================================================ */
+
+.preloader {
+  background: #f8f8f6;
+  color: #171717;
+}
+
+.preloader-icon {
+  background: #171717;
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
+}
+
+.preloader-dot {
+  background: #171717;
+}
+
+.preloader-text {
+  color: #999995;
+}
+
+/* ============================================================
+   DARK MODE
+============================================================ */
+
+html.dark .preloader {
+  background: #111111;
+  color: #ffffff;
+}
+
+html.dark .preloader-icon {
+  background: #ffffff;
+  box-shadow: 0 20px 35px rgba(255, 255, 255, 0.05);
+}
+
+html.dark .preloader-dot {
+  background: #ffffff;
+}
+
+html.dark .preloader-text {
+  color: #666666;
+}

@@ -1,801 +1,529 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 
 type Module = "home" | "about" | "experience" | "projects" | "skills";
 
 type HeaderProps = {
   activeModule?: string;
-  onMenuClick?: () => void;
-  onNavigate?: (module: Module, query?: string) => void;
+  onMenuClick: () => void;
+  onNavigate: (module: Module, query?: string) => void;
+  desktopSidebarCollapsed: boolean;
 };
 
-const searchableModules: {
-  id: Module;
-  label: string;
-  description: string;
-  keywords: string[];
-}[] = [
-  {
-    id: "home",
-    label: "Home",
-    description: "Introduction",
-    keywords: [
-      "home",
-      "introduction",
-      "stephen",
-      "software developer",
-      "system analyst",
-      "programmer",
-      "enterprise applications",
-      "erp",
-      "hris",
-      "davao",
-      "philippines",
-    ],
-  },
-  {
-    id: "about",
-    label: "About",
-    description: "Professional profile",
-    keywords: [
-      "about",
-      "profile",
-      "software developer",
-      "system analyst",
-      "programmer",
-      "enterprise applications",
-      "erp",
-      "hris",
-      "database",
-      "business process automation",
-      "workflow automation",
-      "reporting",
-      "analytics",
-      "dashboard",
-      "access control",
-      "audit logging",
-    ],
-  },
-  {
-    id: "experience",
-    label: "Experience",
-    description: "Work history",
-    keywords: [
-      "experience",
-      "software developer",
-      "system analyst",
-      "programmer",
-      "supervisor",
-      "millennium specialty coco products",
-      "lapanday foods corporation",
-      "erp",
-      "hris",
-      "procure-to-pay",
-      "p2p",
-      "inventory",
-      "asset management",
-      "employee records",
-      "attendance",
-      "timekeeping",
-      "leave management",
-      "travel orders",
-      "recruitment",
-      "applicant tracking",
-      "ssrs",
-      "reporting",
-      "analytics",
-      "database",
-      "workflow",
-      "access control",
-      "audit logging",
-      "sdcl",
-      "system optimization",
-    ],
-  },
-  {
-    id: "projects",
-    label: "Projects",
-    description: "Selected work",
-    keywords: [
-      "projects",
-      "erp",
-      "enterprise resource planning",
-      "procure-to-pay",
-      "p2p",
-      "inventory",
-      "warehouse",
-      "asset management",
-      "asset",
-      "dashboard",
-      "hris",
-      "human resource",
-      "employee",
-      "attendance",
-      "leave",
-      "recruitment",
-      "applicant tracking",
-      "travel",
-      "scheduling",
-      "reporting",
-      "analytics",
-      "workflow",
-      "automation",
-      "centralized data",
-    ],
-  },
-  {
-    id: "skills",
-    label: "Skills",
-    description: "Technologies & expertise",
-    keywords: [
-      "skills",
-      "technologies",
-      "c#",
-      ".net",
-      ".net core",
-      "asp.net",
-      "asp.net core",
-      "sql server",
-      "javascript",
-      "typescript",
-      "html",
-      "css",
-      "next.js",
-      "node.js",
-      "tailwind css",
-      "bootstrap",
-      "jquery",
-      "rest api",
-      "rest apis",
-      "ssrs",
-      "reporting",
-      "database design",
-      "database architecture",
-      "erp",
-      "hris",
-      "system analysis",
-      "enterprise applications",
-      "workflow automation",
-      "dashboard development",
-      "git",
-      "github",
-      "visual studio",
-      "vs code",
-    ],
-  },
-];
+/* ============================================================
+   VIEW TRANSITION TYPES
+============================================================ */
+
+type ViewTransition = {
+  ready: Promise<void>;
+  finished: Promise<void>;
+  updateCallbackDone: Promise<void>;
+  skipTransition: () => void;
+};
+
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (
+    callback: () => void | Promise<void>,
+  ) => ViewTransition;
+};
 
 export default function Header({
   activeModule = "Home",
   onMenuClick,
   onNavigate,
+  desktopSidebarCollapsed,
 }: HeaderProps) {
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const [scrolled, setScrolled] = useState(false);
 
-  // Separate refs for desktop and mobile inputs
-  const desktopSearchInputRef = useRef<HTMLInputElement | null>(null);
-  const mobileSearchInputRef = useRef<HTMLInputElement | null>(null);
+  /*
+   * IMPORTANT:
+   *
+   * Always start with false.
+   *
+   * This makes the server-rendered HTML and the first
+   * client-rendered HTML identical.
+   *
+   * The theme script in layout.tsx has already applied
+   * .dark to <html> before the page paints.
+   */
+  const [darkMode, setDarkMode] = useState(false);
 
-  const normalizedQuery = query.trim().toLowerCase();
-
-  const results = normalizedQuery
-    ? searchableModules.filter((module) => {
-        const searchableText = [
-          module.label,
-          module.description,
-          ...module.keywords,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return searchableText.includes(normalizedQuery);
-      })
-    : [];
+  /*
+   * Prevent multiple theme transitions from running
+   * at the same time.
+   */
+  const themeTransitionRunning = useRef(false);
 
   /* ============================================================
-     KEYBOARD SHORTCUT
+     THEME SYNCHRONIZATION
+     ------------------------------------------------------------
+     The layout theme script runs before paint.
+     Here we synchronize React state with <html class="dark">
+     after hydration.
+
+     useLayoutEffect is intentional here because it runs before
+     the browser paints the updated React state.
+  ============================================================ */
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+
+    const isDark = root.classList.contains("dark");
+
+    setDarkMode(isDark);
+
+    /*
+     * Keep the browser's native UI in sync too.
+     */
+    root.style.colorScheme = isDark ? "dark" : "light";
+  }, []);
+
+  /* ============================================================
+     SCROLL STATE
   ============================================================ */
 
   useEffect(() => {
-    function handleKeyboard(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
+    let ticking = false;
 
-        const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+    function handleScroll() {
+      if (ticking) return;
 
-        if (isDesktop) {
-          desktopSearchInputRef.current?.focus();
-        } else {
-          setSearchOpen(true);
-        }
-      }
+      ticking = true;
 
-      if (event.key === "Escape") {
-        setSearchOpen(false);
-        setQuery("");
-
-        desktopSearchInputRef.current?.blur();
-        mobileSearchInputRef.current?.blur();
-      }
+      window.requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 12);
+        ticking = false;
+      });
     }
 
-    window.addEventListener("keydown", handleKeyboard);
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
 
     return () => {
-      window.removeEventListener("keydown", handleKeyboard);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
   /* ============================================================
-     MOBILE SEARCH AUTO FOCUS
+     THEME TRANSITION
   ============================================================ */
 
-  useEffect(() => {
-    if (!searchOpen) {
-      document.body.style.overflow = "";
+  function toggleTheme(event: MouseEvent<HTMLButtonElement>) {
+    /*
+     * Don't allow overlapping theme transitions.
+     */
+    if (themeTransitionRunning.current) {
       return;
     }
 
-    document.body.style.overflow = "hidden";
+    themeTransitionRunning.current = true;
 
-    const timer = window.setTimeout(() => {
-      mobileSearchInputRef.current?.focus();
-    }, 100);
+    const root = document.documentElement;
 
-    return () => {
-      window.clearTimeout(timer);
-      document.body.style.overflow = "";
+    const nextDarkMode = !darkMode;
+
+    /* ========================================================
+       FIND TOGGLE CENTER
+    ======================================================== */
+
+    const button = event.currentTarget;
+    const rect = button.getBoundingClientRect();
+
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+
+    /* ========================================================
+       CALCULATE VIEWPORT RADIUS
+    ======================================================== */
+
+    const radius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y),
+    );
+
+    /* ========================================================
+       CSS VARIABLES
+    ======================================================== */
+
+    root.style.setProperty("--theme-x", `${x}px`);
+    root.style.setProperty("--theme-y", `${y}px`);
+    root.style.setProperty("--theme-radius", `${radius}px`);
+
+    let themeChanged = false;
+
+    /* ========================================================
+       ACTUALLY CHANGE THE THEME
+    ======================================================== */
+
+    const changeTheme = () => {
+      if (themeChanged) {
+        return;
+      }
+
+      themeChanged = true;
+
+      root.classList.toggle("dark", nextDarkMode);
+
+      root.style.colorScheme = nextDarkMode ? "dark" : "light";
+
+      localStorage.setItem("theme", nextDarkMode ? "dark" : "light");
+
+      setDarkMode(nextDarkMode);
     };
-  }, [searchOpen]);
 
-  function openSearch() {
-    setSearchOpen(true);
-  }
+    /* ========================================================
+       REDUCED MOTION
+    ======================================================== */
 
-  function closeSearch() {
-    setSearchOpen(false);
-    setQuery("");
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
-    mobileSearchInputRef.current?.blur();
-    desktopSearchInputRef.current?.blur();
-  }
+    /* ========================================================
+       VIEW TRANSITION API
+    ======================================================== */
 
-  function navigateTo(module: Module) {
-    const searchTerm = query.trim();
+    const transitionDocument = document as ViewTransitionDocument;
 
-    onNavigate?.(module, searchTerm);
+    const startViewTransition = transitionDocument.startViewTransition;
 
-    closeSearch();
-  }
+    /*
+     * Normal fallback.
+     */
+    if (!startViewTransition || prefersReducedMotion) {
+      changeTheme();
 
-  function handleSearchSubmit(event: React.FormEvent) {
-    event.preventDefault();
+      themeTransitionRunning.current = false;
 
-    if (results.length > 0) {
-      navigateTo(results[0].id);
+      return;
+    }
+
+    try {
+      const transition = startViewTransition.call(
+        transitionDocument,
+        changeTheme,
+      );
+
+      /*
+       * If the transition completes normally.
+       */
+      transition.finished
+        .catch(() => {
+          /*
+           * Make absolutely sure the theme changes even if
+           * the browser aborts the animation.
+           */
+          changeTheme();
+        })
+        .finally(() => {
+          themeTransitionRunning.current = false;
+        });
+    } catch {
+      /*
+       * Browser threw while starting View Transition.
+       */
+      changeTheme();
+
+      themeTransitionRunning.current = false;
     }
   }
 
+  /* ============================================================
+     NAVIGATION
+  ============================================================ */
+
+  const normalizedModule = String(activeModule || "home")
+    .trim()
+    .toLowerCase() as Module;
+
+  const displayModule =
+    normalizedModule.charAt(0).toUpperCase() + normalizedModule.slice(1);
+
+  function handleNavigate(module: Module) {
+    onNavigate(module);
+  }
+
+  /* ============================================================
+     HEADER
+  ============================================================ */
+
   return (
     <header
-      className="
-        fixed
-        top-0
-        right-0
-        left-0
-        lg:left-72
-        z-40
+      className={[
+        "fixed inset-x-0 top-0 z-40",
 
-        h-16
+        desktopSidebarCollapsed ? "lg:left-[88px]" : "lg:left-[300px]",
 
-        bg-white
+        "border-b",
 
-        border-b
-        border-[#e5e5e5]
-      "
+        /*
+         * Smooth sidebar/header movement.
+         */
+        "transition-[left,background-color,border-color,box-shadow]",
+        "duration-500",
+        "ease-[cubic-bezier(0.22,1,0.36,1)]",
+
+        scrolled
+          ? [
+              "border-[#e3e3df] dark:border-[#2a2a2a]",
+              "bg-[#fbfbfa]/95 dark:bg-[#111111]/95",
+              "shadow-sm shadow-black/[0.025]",
+              "dark:shadow-black/20",
+              "backdrop-blur-xl",
+            ].join(" ")
+          : [
+              "border-transparent",
+              "bg-[#fbfbfa]/90 dark:bg-[#111111]/90",
+              "backdrop-blur-md",
+            ].join(" "),
+      ].join(" ")}
     >
       <div
-        className="
-          h-full
-
-          px-4
-          sm:px-8
-          lg:px-10
-          xl:px-12
-
-          flex
-          items-center
-          gap-2
-          sm:gap-4
-        "
+        className={[
+          "flex w-full items-center justify-between",
+          "px-4 sm:px-5 md:px-6 lg:px-8",
+          "h-[64px] md:h-[68px] lg:h-[72px]",
+        ].join(" ")}
       >
-        {/* =====================================================
-            MOBILE MENU
-        ===================================================== */}
+        {/* ==================================================
+            LEFT
+        ================================================== */}
 
-        {!searchOpen && (
+        <div className="flex min-w-0 items-center gap-3">
+          {/* ==================================================
+              MOBILE / TABLET MENU
+          ================================================== */}
+
           <button
             type="button"
             onClick={onMenuClick}
-            aria-label="Open navigation"
-            className="
-              lg:hidden
+            aria-label="Open navigation menu"
+            aria-controls="primary-navigation"
+            className={[
+              "flex h-10 w-10 shrink-0 cursor-pointer",
+              "items-center justify-center rounded-xl",
 
-              shrink-0
+              "border border-[#e2e2de]",
+              "dark:border-[#2d2d2d]",
 
-              w-10
-              h-10
+              "bg-white dark:bg-[#1b1b1b]",
 
-              flex
-              items-center
-              justify-center
+              "text-[#40403d] dark:text-[#e5e5e5]",
 
-              text-[#737373]
+              "transition-[background-color,border-color,transform]",
+              "duration-300",
+              "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
-              hover:text-[#171717]
+              "hover:border-[#d5d5d1]",
+              "dark:hover:border-[#3a3a3a]",
 
-              active:scale-95
+              "hover:bg-[#f1f1ee]",
+              "dark:hover:bg-[#252525]",
 
-              transition
-            "
+              "active:scale-[0.96]",
+
+              "focus:outline-none",
+              "focus-visible:ring-2",
+              "focus-visible:ring-[#171717]/10",
+
+              "md:h-10 md:w-10",
+              "lg:hidden",
+            ].join(" ")}
           >
             <MenuIcon />
           </button>
-        )}
 
-        {/* =====================================================
-            CURRENT PAGE
-        ===================================================== */}
+          {/* ==================================================
+              CURRENT SECTION
+          ================================================== */}
 
-        {!searchOpen && (
-          <div className="min-w-0 flex-1 lg:flex-none">
-            <div
-              className="
-                text-sm
-                font-semibold
-                text-[#171717]
-                truncate
-              "
+          <button
+            type="button"
+            onClick={() => handleNavigate(normalizedModule)}
+            aria-label={`Current section: ${displayModule}`}
+            className={[
+              "group flex min-w-0 cursor-pointer flex-col",
+              "rounded-lg px-1 py-1 text-left",
+
+              "focus:outline-none",
+              "focus-visible:ring-2",
+              "focus-visible:ring-[#171717]/10",
+            ].join(" ")}
+          >
+            <span
+              className={[
+                "max-w-[180px] truncate",
+
+                "text-[14px] font-bold leading-tight",
+                "tracking-[-0.01em]",
+
+                "text-[#171717] dark:text-[#f5f5f5]",
+
+                "transition-[color,transform]",
+                "duration-300",
+                "ease-[cubic-bezier(0.22,1,0.36,1)]",
+
+                "group-hover:text-[#40403d]",
+                "dark:group-hover:text-white",
+
+                "group-hover:translate-x-[1px]",
+
+                "sm:max-w-[240px]",
+                "sm:text-[15px]",
+              ].join(" ")}
             >
-              {activeModule}
-            </div>
+              {displayModule}
+            </span>
 
-            <div
-              className="
-                hidden
-                sm:block
+            <span
+              className={[
+                "mt-1 truncate",
 
-                mt-0.5
+                "text-[9px] font-semibold uppercase",
+                "tracking-[0.16em]",
 
-                text-[10px]
-                uppercase
-                tracking-[0.16em]
+                "text-[#a0a09d] dark:text-[#777]",
 
-                text-[#a3a3a3]
-              "
+                "transition-colors duration-300",
+
+                "sm:text-[10px]",
+              ].join(" ")}
             >
               Stephen J. / Portfolio
-            </div>
-          </div>
-        )}
-
-        {/* =====================================================
-            DESKTOP SEARCH
-        ===================================================== */}
-
-        <div
-          className="
-            hidden
-            md:block
-
-            relative
-
-            ml-auto
-
-            w-full
-            max-w-md
-          "
-        >
-          <form onSubmit={handleSearchSubmit} className="relative w-full">
-            <SearchIcon />
-
-            <input
-              ref={desktopSearchInputRef}
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search portfolio..."
-              aria-label="Search portfolio"
-              autoComplete="off"
-              className="
-                w-full
-
-                h-9
-
-                pl-9
-                pr-12
-
-                bg-[#fafafa]
-
-                border
-                border-[#e5e5e5]
-
-                rounded-none
-
-                text-sm
-                text-[#262626]
-
-                placeholder:text-[#a3a3a3]
-
-                focus:outline-none
-                focus:border-[#bdbdbd]
-
-                transition-colors
-              "
-            />
-
-            {!query && (
-              <span
-                className="
-                  absolute
-                  right-2
-                  top-1/2
-                  -translate-y-1/2
-
-                  hidden
-                  lg:flex
-
-                  items-center
-                  justify-center
-
-                  h-5
-                  px-1.5
-
-                  border
-                  border-[#e5e5e5]
-
-                  text-[9px]
-                  text-[#a3a3a3]
-                "
-              >
-                ⌘ K
-              </span>
-            )}
-
-            {/* Desktop results */}
-
-            {query.trim() && (
-              <SearchResults
-                results={results}
-                onNavigate={navigateTo}
-                desktop
-              />
-            )}
-          </form>
+            </span>
+          </button>
         </div>
 
-        {/* =====================================================
-            MOBILE SEARCH BUTTON
-        ===================================================== */}
+        {/* ==================================================
+            RIGHT — THEME TOGGLE
+        ================================================== */}
 
-        {!searchOpen && (
-          <div className="flex items-center md:hidden">
-            <button
-              type="button"
-              onClick={openSearch}
-              aria-label="Search"
-              className="
-                w-10
-                h-10
+        <div className="flex shrink-0 items-center">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={
+              darkMode ? "Switch to light mode" : "Switch to dark mode"
+            }
+            aria-pressed={darkMode}
+            className={[
+              "relative flex h-10 w-[72px] cursor-pointer",
+              "items-center rounded-full",
+              "border",
 
-                flex
-                items-center
-                justify-center
+              "transition-[background-color,border-color,transform]",
+              "duration-300",
+              "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
-                text-[#737373]
+              "hover:scale-[1.02]",
+              "active:scale-[0.97]",
 
-                hover:text-[#171717]
+              "focus:outline-none",
+              "focus-visible:ring-2",
+              "focus-visible:ring-[#171717]/10",
 
-                active:scale-95
+              "md:h-11 md:w-[78px]",
 
-                transition
-              "
-            >
-              <SearchIconInline />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* =======================================================
-          MOBILE SEARCH OVERLAY
-
-          This is completely separate from desktop search.
-      ======================================================= */}
-
-      {searchOpen && (
-        <div
-          className="
-            fixed
-            inset-0
-            z-[60]
-
-            bg-white
-
-            flex
-            flex-col
-
-            md:hidden
-          "
-        >
-          {/* Mobile search header */}
-
-          <div
-            className="
-              h-16
-              shrink-0
-
-              px-4
-
-              flex
-              items-center
-              gap-3
-
-              border-b
-              border-[#e5e5e5]
-
-              bg-white
-            "
+              darkMode
+                ? "border-[#333] bg-[#1c1c1c]"
+                : "border-[#e2e2de] bg-white",
+            ].join(" ")}
           >
-            <form onSubmit={handleSearchSubmit} className="relative flex-1">
-              <SearchIcon />
+            {/* ==================================================
+                SUN ICON
+            ================================================== */}
 
-              <input
-                ref={mobileSearchInputRef}
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search portfolio..."
-                aria-label="Search portfolio"
-                autoComplete="off"
-                autoFocus
-                className="
-                  w-full
+            <span
+              className={[
+                "absolute left-[9px]",
 
-                  h-10
+                "transition-all duration-300",
+                "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
-                  pl-10
-                  pr-3
-
-                  bg-[#fafafa]
-
-                  border
-                  border-[#e5e5e5]
-
-                  rounded-none
-
-                  text-sm
-                  text-[#262626]
-
-                  placeholder:text-[#a3a3a3]
-
-                  focus:outline-none
-                  focus:border-[#bdbdbd]
-                "
-              />
-            </form>
-
-            <button
-              type="button"
-              onClick={closeSearch}
-              aria-label="Close search"
-              className="
-                shrink-0
-
-                w-10
-                h-10
-
-                flex
-                items-center
-                justify-center
-
-                text-xl
-                leading-none
-
-                text-[#737373]
-
-                hover:text-[#171717]
-
-                active:scale-95
-
-                transition
-              "
+                darkMode ? "scale-90 opacity-40" : "scale-100 opacity-100",
+              ].join(" ")}
             >
-              ×
-            </button>
-          </div>
+              <SunIcon
+                className={darkMode ? "text-[#888]" : "text-[#171717]"}
+              />
+            </span>
 
-          {/* Mobile results */}
+            {/* ==================================================
+                MOON ICON
+            ================================================== */}
 
-          {query.trim() && (
-            <SearchResults results={results} onNavigate={navigateTo} />
-          )}
+            <span
+              className={[
+                "absolute right-[9px]",
+
+                "transition-all duration-300",
+                "ease-[cubic-bezier(0.22,1,0.36,1)]",
+
+                darkMode ? "scale-100 opacity-100" : "scale-90 opacity-40",
+              ].join(" ")}
+            >
+              <MoonIcon className={darkMode ? "text-white" : "text-[#888]"} />
+            </span>
+
+            {/* ==================================================
+                SLIDING KNOB
+            ================================================== */}
+
+            <span
+              className={[
+                "absolute top-1/2",
+
+                "flex h-8 w-8",
+                "-translate-y-1/2",
+
+                "items-center justify-center",
+                "rounded-full",
+
+                "shadow-sm",
+
+                /*
+                 * Smooth physical-style movement.
+                 */
+                "transition-[left,background-color,box-shadow]",
+                "duration-500",
+                "ease-[cubic-bezier(0.22,1,0.36,1)]",
+
+                "md:h-9 md:w-9",
+
+                darkMode
+                  ? [
+                      "left-[calc(100%-36px)]",
+                      "bg-[#303030]",
+                      "shadow-black/30",
+                    ].join(" ")
+                  : ["left-1", "bg-[#f1f1ee]", "shadow-black/5"].join(" "),
+              ].join(" ")}
+            >
+              {darkMode ? (
+                <MoonIcon className="text-white" />
+              ) : (
+                <SunIcon className="text-[#171717]" />
+              )}
+            </span>
+          </button>
         </div>
-      )}
+      </div>
     </header>
   );
 }
 
 /* ============================================================
-   SEARCH RESULTS
-============================================================ */
-
-function SearchResults({
-  results,
-  onNavigate,
-  desktop = false,
-}: {
-  results: {
-    id: Module;
-    label: string;
-    description: string;
-    keywords: string[];
-  }[];
-  onNavigate: (module: Module) => void;
-  desktop?: boolean;
-}) {
-  return (
-    <div
-      className={`
-        bg-white
-
-        ${
-          desktop
-            ? `
-              absolute
-              top-full
-              left-0
-              right-0
-              mt-2
-
-              border
-              border-[#e5e5e5]
-
-              shadow-[0_8px_24px_rgba(0,0,0,0.06)]
-
-              z-50
-            `
-            : `
-              flex-1
-              overflow-y-auto
-            `
-        }
-      `}
-    >
-      {results.length > 0 ? (
-        <div className="py-2">
-          <div
-            className="
-              px-5
-              md:px-4
-              py-3
-
-              text-[10px]
-              uppercase
-              tracking-[0.16em]
-
-              text-[#a3a3a3]
-            "
-          >
-            Results
-          </div>
-
-          {results.map((result) => (
-            <button
-              key={result.id}
-              type="button"
-              onClick={() => onNavigate(result.id)}
-              className="
-                w-full
-
-                flex
-                items-center
-                justify-between
-
-                px-5
-                md:px-4
-
-                py-4
-                md:py-3
-
-                text-left
-
-                border-b
-                md:border-b-0
-
-                border-[#f0f0f0]
-
-                hover:bg-[#fafafa]
-
-                active:bg-[#f5f5f5]
-
-                transition-colors
-              "
-            >
-              <div className="min-w-0">
-                <div
-                  className="
-                    text-sm
-                    font-medium
-                    text-[#171717]
-                  "
-                >
-                  {result.label}
-                </div>
-
-                <div
-                  className="
-                    mt-1
-
-                    text-xs
-
-                    text-[#a3a3a3]
-
-                    truncate
-                  "
-                >
-                  {result.description}
-                </div>
-              </div>
-
-              <span
-                className="
-                  ml-4
-                  shrink-0
-
-                  text-[#a3a3a3]
-                  text-base
-                "
-              >
-                →
-              </span>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="px-5 py-8 md:px-4 md:py-5">
-          <div
-            className="
-              text-sm
-              font-medium
-              text-[#404040]
-            "
-          >
-            No results found
-          </div>
-
-          <div
-            className="
-              mt-2
-
-              text-xs
-              leading-relaxed
-
-              text-[#a3a3a3]
-            "
-          >
-            Try projects, skills, experience, HRIS, JavaScript, or about.
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ============================================================
-   MENU ICON
+   ICONS
 ============================================================ */
 
 function MenuIcon() {
@@ -804,8 +532,8 @@ function MenuIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.7"
-      className="w-5 h-5"
+      strokeWidth="1.8"
+      className="h-5 w-5"
       aria-hidden="true"
     >
       <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
@@ -813,59 +541,53 @@ function MenuIcon() {
   );
 }
 
-/* ============================================================
-   SEARCH ICON
-============================================================ */
-
-function SearchIcon() {
+function SunIcon({ className = "" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.7"
-      className="
-        absolute
-        left-3
-        top-1/2
-        -translate-y-1/2
-
-        w-4
-        h-4
-
-        text-[#a3a3a3]
-
-        pointer-events-none
-      "
+      className={`h-4 w-4 ${className}`}
       aria-hidden="true"
     >
+      <circle cx="12" cy="12" r="3.5" />
+
       <path
         strokeLinecap="round"
-        strokeLinejoin="round"
-        d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
+        d="
+          M12 2.5v2
+          M12 19.5v2
+          M4.58 4.58l1.42 1.42
+          M18 18l1.42 1.42
+          M2.5 12h2
+          M19.5 12h2
+          M4.58 19.42L6 18
+          M18 6l1.42-1.42
+        "
       />
     </svg>
   );
 }
 
-/* ============================================================
-   INLINE SEARCH ICON
-============================================================ */
-
-function SearchIconInline() {
+function MoonIcon({ className = "" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.7"
-      className="w-5 h-5"
+      className={`h-4 w-4 ${className}`}
       aria-hidden="true"
     >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
+        d="
+          M20 15.5
+          A8.5 8.5 0 0 1 8.5 4
+          A8.5 8.5 0 1 0 20 15.5Z
+        "
       />
     </svg>
   );

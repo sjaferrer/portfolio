@@ -21,17 +21,15 @@ export const metadata: Metadata = {
 /* ============================================================
    THEME INITIALIZATION
    ------------------------------------------------------------
-   This runs before React hydrates and before the page paints.
+   First visit:
+   - Defaults to LIGHT mode.
+   - Does NOT use the system's dark-mode preference.
 
-   This is what prevents:
+   Returning visit:
+   - Uses the saved "dark" or "light" preference.
 
-   DARK MODE
-   white flash -> black
-
-   Instead:
-
-   DARK MODE
-   black immediately
+   This runs before React hydrates and before the page paints,
+   helping prevent a flash of the wrong theme.
 ============================================================ */
 
 const themeScript = `
@@ -40,28 +38,20 @@ const themeScript = `
     var root = document.documentElement;
     var savedTheme = localStorage.getItem("theme");
 
-    var isDark =
-      savedTheme === "dark" ||
-      (
-        savedTheme !== "light" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      );
+    // Default to LIGHT mode.
+    // Only use dark mode if the user explicitly saved "dark".
+    var isDark = savedTheme === "dark";
 
     root.classList.toggle("dark", isDark);
 
-    /*
-     * Store the current theme as a data attribute too.
-     * This is useful for the preloader and CSS.
-     */
     root.setAttribute(
       "data-theme",
       isDark ? "dark" : "light"
     );
   } catch (error) {
-    /*
-     * Safe fallback.
-     */
+    // Safe fallback: LIGHT mode.
     document.documentElement.classList.remove("dark");
+
     document.documentElement.setAttribute(
       "data-theme",
       "light"
@@ -81,8 +71,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* ====================================================
             THEME INITIALIZATION
 
-            IMPORTANT:
-            Keep this before the page content.
+            Must run before the page content is rendered.
         ==================================================== */}
 
         <script
@@ -108,21 +97,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
           "antialiased",
 
-          /*
-           * LIGHT
-           */
+          /* ==================================================
+             LIGHT MODE
+          ================================================== */
+
           "bg-[#f8f8f6]",
           "text-[#171717]",
 
-          /*
-           * DARK
-           */
+          /* ==================================================
+             DARK MODE
+          ================================================== */
+
           "dark:bg-[#111111]",
           "dark:text-white",
 
-          /*
-           * Normal theme changes.
-           */
+          /* ==================================================
+             THEME TRANSITION
+          ================================================== */
+
           "transition-colors",
           "duration-300",
         ].join(" ")}

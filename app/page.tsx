@@ -238,6 +238,10 @@ export default function HomePage() {
   const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showTopButton, setShowTopButton] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  // const [showTopButton, setShowTopButton] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
+  const isSidebarCollapsed = isDesktop && desktopSidebarCollapsed;
 
   const sectionRefs = useRef<Record<Module, HTMLElement | null>>({
     home: null,
@@ -252,16 +256,62 @@ export default function HomePage() {
     [activeModule],
   );
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+
+    const handleChange = () => {
+      setIsDesktop(mediaQuery.matches);
+    };
+
+    handleChange();
+
+    mediaQuery.addEventListener("change", handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowTopButton(window.scrollY > 600);
+    };
+
+    const footer = document.getElementById("mobile-footer");
+
+    const observer = footer
+      ? new IntersectionObserver(
+          ([entry]) => {
+            setFooterVisible(entry.isIntersecting);
+          },
+          { threshold: 0.1 },
+        )
+      : null;
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    if (footer && observer) {
+      observer.observe(footer);
+    }
+
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      observer?.disconnect();
+    };
+  }, []);
+
   /* ============================================================
    INITIAL PRELOADER
 ============================================================ */
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 800);
+    }, 75);
 
-    return () => window.clearTimeout(timer);
+    return () => clearTimeout(timer);
   }, []);
 
   /* ============================================================
@@ -434,51 +484,32 @@ export default function HomePage() {
           "fixed inset-0 z-[9999]",
           "flex items-center justify-center",
           "bg-[#f8f8f6] dark:bg-[#111111]",
-          "transition-opacity duration-500 ease-out",
+          "transition-opacity duration-75",
           isLoading
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0",
         ].join(" ")}
       >
-        <div
-          className={[
-            "flex flex-col items-center justify-center",
-            "transition-transform duration-500 ease-out",
-            isLoading ? "scale-100" : "scale-95",
-          ].join(" ")}
-        >
+        <div className="flex flex-col items-center justify-center">
           <div
             className={[
               "flex h-16 w-16 items-center justify-center",
               "rounded-2xl",
               "bg-[#171717] dark:bg-white",
-              "shadow-xl shadow-black/10",
-              "dark:shadow-white/5",
             ].join(" ")}
           >
             <img src="/icon.svg" alt="" className="h-8 w-8 object-contain" />
           </div>
 
           <div className="mt-5 flex items-center gap-2">
-            <span
-              className={[
-                "h-1.5 w-1.5 rounded-full animate-pulse",
-                "bg-[#171717] dark:bg-white",
-              ].join(" ")}
-            />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#171717] dark:bg-white" />
 
-            <span
-              className={[
-                "text-[10px] font-bold uppercase tracking-[0.25em]",
-                "text-[#999995] dark:text-[#666]",
-              ].join(" ")}
-            >
+            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#999995] dark:text-[#666]">
               Loading
             </span>
           </div>
         </div>
       </div>
-
       {/* ========================================================
           PAGE
       ======================================================== */}
@@ -517,7 +548,7 @@ export default function HomePage() {
         <aside
           aria-label="Primary navigation"
           className={[
-            "fixed inset-y-0 left-0 z-50 flex flex-col",
+            "fixed inset-y-0 left-0 z-50 flex w-full flex-col",
             "border-r border-[#e3e3e0] dark:border-[#292929]",
             "bg-[#fbfbfa]/95 dark:bg-[#151515]/95",
             "backdrop-blur-xl",
@@ -525,7 +556,13 @@ export default function HomePage() {
             "shadow-2xl shadow-black/[0.08] lg:shadow-none",
             "lg:translate-x-0",
             mobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
-            desktopSidebarCollapsed ? "lg:w-[88px]" : "w-[300px] lg:w-[300px]",
+
+            // Phone: fullscreen
+            // Tablet / iPad: 300px
+            // Desktop: 88px collapsed / 300px expanded
+            isSidebarCollapsed
+              ? "md:w-[300px] lg:w-[88px]"
+              : "md:w-[300px] lg:w-[300px]",
           ].join(" ")}
         >
           {/* SIDEBAR HEADER */}
@@ -533,10 +570,10 @@ export default function HomePage() {
           <header
             className={[
               "flex h-[76px] shrink-0 items-center border-b border-[#e5e5e2] dark:border-[#292929]",
-              desktopSidebarCollapsed ? "justify-center px-3" : "px-5",
+              isSidebarCollapsed ? "justify-center px-3" : "px-5",
             ].join(" ")}
           >
-            {desktopSidebarCollapsed ? (
+            {isSidebarCollapsed ? (
               <div className="flex items-center justify-center">
                 <button
                   type="button"
@@ -553,7 +590,7 @@ export default function HomePage() {
                 >
                   <img
                     src="/icon.svg"
-                    alt="Stephen J."
+                    alt="STEPHEN J."
                     className="h-6 w-6 object-contain"
                   />
                 </button>
@@ -599,7 +636,7 @@ export default function HomePage() {
               </div>
             )}
 
-            {!desktopSidebarCollapsed ? (
+            {!isSidebarCollapsed ? (
               <button
                 type="button"
                 onClick={() => {
@@ -666,7 +703,7 @@ export default function HomePage() {
                   aria-hidden="true"
                 >
                   <path
-                    d="M7.5 4.5L13 10l-5.5 5.5"
+                    d="M7.5 4.5L13 10l-5.5-5.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
@@ -678,7 +715,7 @@ export default function HomePage() {
           {/* SIDEBAR CONTENT */}
 
           <div className="flex-1 overflow-y-auto px-4 py-7">
-            {!desktopSidebarCollapsed && (
+            {!isSidebarCollapsed && (
               <div className="mb-3 flex items-center justify-between px-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a0a09d] dark:text-[#666]">
                   Navigation
@@ -701,7 +738,7 @@ export default function HomePage() {
                     onClick={() => navigate(module.id)}
                     aria-current={isActive ? "page" : undefined}
                     title={
-                      desktopSidebarCollapsed
+                      isSidebarCollapsed
                         ? `${module.label} — ${module.description}`
                         : undefined
                     }
@@ -710,7 +747,7 @@ export default function HomePage() {
                       "rounded-2xl text-left outline-none",
                       "transition-all duration-200",
                       "focus:outline-none focus:ring-0",
-                      desktopSidebarCollapsed
+                      isSidebarCollapsed
                         ? "justify-center px-2 py-3"
                         : "gap-3 px-3 py-3.5",
                       isActive
@@ -732,7 +769,7 @@ export default function HomePage() {
                       className={[
                         "flex shrink-0 items-center justify-center rounded-xl",
                         "transition-colors duration-200",
-                        desktopSidebarCollapsed ? "h-11 w-11" : "h-10 w-10",
+                        isSidebarCollapsed ? "h-11 w-11" : "h-10 w-10",
                         isActive
                           ? "bg-[#f0f0ee] text-[#171717] dark:bg-[#303030] dark:text-white"
                           : [
@@ -746,7 +783,7 @@ export default function HomePage() {
                       {module.icon}
                     </span>
 
-                    {!desktopSidebarCollapsed && (
+                    {!isSidebarCollapsed && (
                       <>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -806,13 +843,13 @@ export default function HomePage() {
             {/* CONNECT */}
 
             <div className="mt-12">
-              {!desktopSidebarCollapsed && (
+              {!isSidebarCollapsed && (
                 <div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#a0a09d] dark:text-[#666]">
                   Connect
                 </div>
               )}
 
-              {desktopSidebarCollapsed ? (
+              {isSidebarCollapsed ? (
                 <div className="mt-4 space-y-1.5">
                   <a
                     href="mailto:sjaferrer1@gmail.com"
@@ -846,7 +883,7 @@ export default function HomePage() {
                     aria-label="LinkedIn"
                     className="group flex h-[56px] w-full items-center justify-center rounded-2xl text-[#737373] outline-none transition-colors duration-200 hover:bg-white hover:text-[#171717] dark:text-[#858585] dark:hover:bg-[#1f1f1f] dark:hover:text-white focus:outline-none"
                   >
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#f0f0ee] text-[#8c8c88] transition-colors duration-200 group-hover:bg-[#e9e9e7] group-hover:text-[#171717] dark:bg-[#252525] dark:text-[#777] dark:group-hover:bg-[#303030] dark:group-hover:text-white">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#f0f0ee] text-[#8c8c88] transition-colors duration-200 group-hover:bg-[#e9e9e7] group-hover:text-[#171717] dark:bg-[#252525] dark:text-[#777] dark:group-hover:bg-[#303030] dark:hover:text-white">
                       <LinkedInIcon />
                     </span>
                   </a>
@@ -879,7 +916,7 @@ export default function HomePage() {
 
           {/* SIDEBAR FOOTER */}
 
-          {desktopSidebarCollapsed ? (
+          {isSidebarCollapsed ? (
             <div className="border-t border-[#e5e5e2] p-4 dark:border-[#292929]">
               <div className="flex flex-col items-center gap-1">
                 <span className="text-[10px] font-bold text-[#c1c1be] dark:text-[#555]">
@@ -892,15 +929,15 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[11px] font-semibold text-[#737373] dark:text-[#858585]">
-                    © {new Date().getFullYear()} Stephen J.
+                    © {new Date().getFullYear()} STEPHEN J.
                   </div>
 
                   <div className="mt-1 text-[10px] text-[#aaa] dark:text-[#666]">
-                    Designed & developed with care.
+                    Full Stack Developer · Systems Analyst
                   </div>
                 </div>
 
-                <span className="text-[10px] font-bold text-[#c1c1be] dark:text-[#555]">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#d4d4cf] text-[10px] font-bold text-[#aaa] dark:border-[#303030] dark:text-[#555]">
                   SJ
                 </span>
               </div>
@@ -958,66 +995,82 @@ export default function HomePage() {
           </SectionShell>
 
           {/* MOBILE FOOTER */}
-          <footer className="border-t border-[#e3e3df] bg-[#f8f8f6] px-5 py-12 dark:border-[#292929] dark:bg-[#111111] lg:hidden">
+          <footer
+            id="mobile-footer"
+            className="border-t border-[#deded9] bg-[#f1f1ed] px-5 py-12 dark:border-[#292929] dark:bg-[#151515] lg:hidden"
+          >
             <div className="mx-auto w-full max-w-[1180px]">
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#999995] dark:text-[#666]">
-                Connect
+              {/* CONNECT */}
+              <div>
+                <div className="px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#999995] dark:text-[#666]">
+                  Connect
+                </div>
+
+                <div className="mt-4 space-y-1.5">
+                  <a
+                    href="mailto:sjaferrer1@gmail.com"
+                    className="group flex min-h-12 items-center justify-between rounded-xl border border-[#deded9] bg-white px-4 text-sm font-bold text-[#40403d] transition-all duration-200 hover:border-[#d2d2cd] hover:bg-[#fafaf8] dark:border-[#303030] dark:bg-[#1d1d1d] dark:text-[#ddd] dark:hover:border-[#404040] dark:hover:bg-[#222]"
+                  >
+                    <span className="flex items-center gap-3">
+                      <EmailIcon />
+                      Email
+                    </span>
+
+                    <span className="text-[#aaa] transition-transform duration-200 group-hover:translate-x-0.5 dark:text-[#666]">
+                      ↗
+                    </span>
+                  </a>
+
+                  <a
+                    href="https://github.com/sjaferrer"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex min-h-12 items-center justify-between rounded-xl border border-[#deded9] bg-white px-4 text-sm font-bold text-[#40403d] transition-all duration-200 hover:border-[#d2d2cd] hover:bg-[#fafaf8] dark:border-[#303030] dark:bg-[#1d1d1d] dark:text-[#ddd] dark:hover:border-[#404040] dark:hover:bg-[#222]"
+                  >
+                    <span className="flex items-center gap-3">
+                      <GitHubIcon />
+                      GitHub
+                    </span>
+
+                    <span className="text-[#aaa] transition-transform duration-200 group-hover:translate-x-0.5 dark:text-[#666]">
+                      ↗
+                    </span>
+                  </a>
+
+                  <a
+                    href="https://www.linkedin.com/in/stephen-john-f-964557318/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex min-h-12 items-center justify-between rounded-xl border border-[#deded9] bg-white px-4 text-sm font-bold text-[#40403d] transition-all duration-200 hover:border-[#d2d2cd] hover:bg-[#fafaf8] dark:border-[#303030] dark:bg-[#1d1d1d] dark:text-[#ddd] dark:hover:border-[#404040] dark:hover:bg-[#222]"
+                  >
+                    <span className="flex items-center gap-3">
+                      <LinkedInIcon />
+                      LinkedIn
+                    </span>
+
+                    <span className="text-[#aaa] transition-transform duration-200 group-hover:translate-x-0.5 dark:text-[#666]">
+                      ↗
+                    </span>
+                  </a>
+                </div>
               </div>
 
-              <div className="mt-5 flex flex-col gap-2">
-                <a
-                  href="mailto:sjaferrer1@gmail.com"
-                  className="group flex min-h-12 items-center justify-between rounded-xl border border-[#e2e2de] bg-white px-4 text-sm font-bold text-[#40403d] transition-all duration-200 hover:border-[#d5d5d1] hover:bg-[#f1f1ee] dark:border-[#303030] dark:bg-[#1b1b1b] dark:text-[#ddd] dark:hover:border-[#404040] dark:hover:bg-[#222]"
-                >
-                  <span className="flex items-center gap-3">
-                    <EmailIcon />
-                    Email
-                  </span>
-                  <span className="text-[#aaa]">→</span>
-                </a>
-
-                <a
-                  href="https://github.com/sjaferrer"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex min-h-12 items-center justify-between rounded-xl border border-[#e2e2de] bg-white px-4 text-sm font-bold text-[#40403d] transition-all duration-200 hover:border-[#d5d5d1] hover:bg-[#f1f1ee] dark:border-[#303030] dark:bg-[#1b1b1b] dark:text-[#ddd] dark:hover:border-[#404040] dark:hover:bg-[#222]"
-                >
-                  <span className="flex items-center gap-3">
-                    <GitHubIcon />
-                    GitHub
-                  </span>
-                  <span className="text-[#aaa]">↗</span>
-                </a>
-
-                <a
-                  href="https://www.linkedin.com/in/stephen-john-f-964557318/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex min-h-12 items-center justify-between rounded-xl border border-[#e2e2de] bg-white px-4 text-sm font-bold text-[#40403d] transition-all duration-200 hover:border-[#d5d5d1] hover:bg-[#f1f1ee] dark:border-[#303030] dark:bg-[#1b1b1b] dark:text-[#ddd] dark:hover:border-[#404040] dark:hover:bg-[#222]"
-                >
-                  <span className="flex items-center gap-3">
-                    <LinkedInIcon />
-                    LinkedIn
-                  </span>
-                  <span className="text-[#aaa]">↗</span>
-                </a>
-              </div>
-
-              <div className="mt-10 border-t border-[#e3e3df] pt-6 dark:border-[#292929]">
+              {/* FOOTER INFO */}
+              <div className="mt-8 border-t border-[#dcdcd7] pt-6 dark:border-[#292929]">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-[11px] font-semibold text-[#737373] dark:text-[#858585]">
-                      © {new Date().getFullYear()} Stephen J.
+                      © {new Date().getFullYear()} STEPHEN J.
                     </div>
 
                     <div className="mt-1 text-[10px] text-[#aaa] dark:text-[#666]">
-                      Designed & developed with care.
+                      Full Stack Developer · Systems Analyst
                     </div>
                   </div>
 
-                  <span className="text-[10px] font-bold text-[#c1c1be] dark:text-[#555]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#d4d4cf] text-[10px] font-bold text-[#aaa] dark:border-[#303030] dark:text-[#555]">
                     SJ
-                  </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1030,7 +1083,7 @@ export default function HomePage() {
           onClick={scrollToTop}
           className={[
             "fixed bottom-5 right-5 z-30",
-            "flex h-12 w-12 cursor-pointer items-center justify-center",
+            "flex h-11 w-11 cursor-pointer items-center justify-center",
             "rounded-xl border border-[#dcdcd7] bg-white text-[#171717]",
             "dark:border-[#333] dark:bg-[#1d1d1d] dark:text-white",
             "shadow-lg shadow-black/[0.08]",
@@ -1039,7 +1092,7 @@ export default function HomePage() {
             "dark:hover:bg-white dark:hover:text-[#111]",
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#171717] focus-visible:ring-offset-2",
             "dark:focus-visible:ring-white dark:focus-visible:ring-offset-[#111111]",
-            showTopButton
+            showTopButton && !footerVisible
               ? "translate-y-0 opacity-100"
               : "pointer-events-none translate-y-3 opacity-0",
           ].join(" ")}

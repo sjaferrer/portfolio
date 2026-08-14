@@ -43,45 +43,26 @@ export default function Header({
   const [scrolled, setScrolled] = useState(false);
 
   /*
-   * IMPORTANT:
-   *
-   * Always start with false.
-   *
-   * This makes the server-rendered HTML and the first
-   * client-rendered HTML identical.
-   *
-   * The theme script in layout.tsx has already applied
-   * .dark to <html> before the page paints.
+   * Start false so server and client HTML match.
+   * layout.tsx should already apply .dark before paint.
    */
   const [darkMode, setDarkMode] = useState(false);
 
   /*
-   * Prevent multiple theme transitions from running
-   * at the same time.
+   * Prevent rapid/spammed theme clicks.
    */
   const themeTransitionRunning = useRef(false);
 
   /* ============================================================
      THEME SYNCHRONIZATION
-     ------------------------------------------------------------
-     The layout theme script runs before paint.
-     Here we synchronize React state with <html class="dark">
-     after hydration.
-
-     useLayoutEffect is intentional here because it runs before
-     the browser paints the updated React state.
   ============================================================ */
 
   useLayoutEffect(() => {
     const root = document.documentElement;
-
     const isDark = root.classList.contains("dark");
 
     setDarkMode(isDark);
 
-    /*
-     * Keep the browser's native UI in sync too.
-     */
     root.style.colorScheme = isDark ? "dark" : "light";
   }, []);
 
@@ -120,7 +101,8 @@ export default function Header({
 
   function toggleTheme(event: MouseEvent<HTMLButtonElement>) {
     /*
-     * Don't allow overlapping theme transitions.
+     * Ignore additional clicks while the current transition
+     * is still running.
      */
     if (themeTransitionRunning.current) {
       return;
@@ -129,7 +111,6 @@ export default function Header({
     themeTransitionRunning.current = true;
 
     const root = document.documentElement;
-
     const nextDarkMode = !darkMode;
 
     /* ========================================================
@@ -166,9 +147,7 @@ export default function Header({
     ======================================================== */
 
     const changeTheme = () => {
-      if (themeChanged) {
-        return;
-      }
+      if (themeChanged) return;
 
       themeChanged = true;
 
@@ -198,15 +177,25 @@ export default function Header({
     const startViewTransition = transitionDocument.startViewTransition;
 
     /*
-     * Normal fallback.
+     * Browser doesn't support View Transition API
+     * or user prefers reduced motion.
      */
     if (!startViewTransition || prefersReducedMotion) {
       changeTheme();
 
-      themeTransitionRunning.current = false;
+      window.setTimeout(
+        () => {
+          themeTransitionRunning.current = false;
+        },
+        prefersReducedMotion ? 0 : 500,
+      );
 
       return;
     }
+
+    /* ========================================================
+       START VIEW TRANSITION
+    ======================================================== */
 
     try {
       const transition = startViewTransition.call(
@@ -214,27 +203,31 @@ export default function Header({
         changeTheme,
       );
 
-      /*
-       * If the transition completes normally.
-       */
       transition.finished
         .catch(() => {
           /*
-           * Make absolutely sure the theme changes even if
-           * the browser aborts the animation.
+           * Make sure the theme still changes if the browser
+           * cancels the animation.
            */
           changeTheme();
         })
         .finally(() => {
-          themeTransitionRunning.current = false;
+          /*
+           * Small buffer prevents immediate re-triggering.
+           */
+          window.setTimeout(() => {
+            themeTransitionRunning.current = false;
+          }, 150);
         });
     } catch {
       /*
-       * Browser threw while starting View Transition.
+       * Fallback if View Transition throws.
        */
       changeTheme();
 
-      themeTransitionRunning.current = false;
+      window.setTimeout(() => {
+        themeTransitionRunning.current = false;
+      }, 500);
     }
   }
 
@@ -267,7 +260,7 @@ export default function Header({
         "border-b",
 
         /*
-         * Smooth sidebar/header movement.
+         * Smooth header/sidebar movement.
          */
         "transition-[left,background-color,border-color,box-shadow]",
         "duration-500",
@@ -418,15 +411,17 @@ export default function Header({
             aria-pressed={darkMode}
             className={[
               "relative flex h-10 w-[72px] cursor-pointer",
-              "items-center rounded-full",
-              "border",
+              "items-center rounded-full border",
 
-              "transition-[background-color,border-color,transform]",
-              "duration-300",
+              /*
+               * Smooth physical-style movement.
+               */
+              "transition-[background-color,border-color,transform,box-shadow]",
+              "duration-500",
               "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
               "hover:scale-[1.02]",
-              "active:scale-[0.97]",
+              "active:scale-[0.98]",
 
               "focus:outline-none",
               "focus-visible:ring-2",
@@ -435,8 +430,16 @@ export default function Header({
               "md:h-11 md:w-[78px]",
 
               darkMode
-                ? "border-[#333] bg-[#1c1c1c]"
-                : "border-[#e2e2de] bg-white",
+                ? [
+                    "border-[#333]",
+                    "bg-[#1c1c1c]",
+                    "shadow-inner shadow-black/20",
+                  ].join(" ")
+                : [
+                    "border-[#e2e2de]",
+                    "bg-white",
+                    "shadow-inner shadow-black/[0.025]",
+                  ].join(" "),
             ].join(" ")}
           >
             {/* ==================================================
@@ -447,14 +450,15 @@ export default function Header({
               className={[
                 "absolute left-[9px]",
 
-                "transition-all duration-300",
+                "transition-[opacity,transform,color]",
+                "duration-500",
                 "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
-                darkMode ? "scale-90 opacity-40" : "scale-100 opacity-100",
+                darkMode ? "scale-75 opacity-30" : "scale-100 opacity-100",
               ].join(" ")}
             >
               <SunIcon
-                className={darkMode ? "text-[#888]" : "text-[#171717]"}
+                className={darkMode ? "text-[#777]" : "text-[#171717]"}
               />
             </span>
 
@@ -466,10 +470,11 @@ export default function Header({
               className={[
                 "absolute right-[9px]",
 
-                "transition-all duration-300",
+                "transition-[opacity,transform,color]",
+                "duration-500",
                 "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
-                darkMode ? "scale-100 opacity-100" : "scale-90 opacity-40",
+                darkMode ? "scale-100 opacity-100" : "scale-75 opacity-30",
               ].join(" ")}
             >
               <MoonIcon className={darkMode ? "text-white" : "text-[#888]"} />
@@ -482,19 +487,16 @@ export default function Header({
             <span
               className={[
                 "absolute top-1/2",
-
-                "flex h-8 w-8",
                 "-translate-y-1/2",
 
+                "flex h-8 w-8",
                 "items-center justify-center",
                 "rounded-full",
 
-                "shadow-sm",
-
                 /*
-                 * Smooth physical-style movement.
+                 * Smooth physical movement.
                  */
-                "transition-[left,background-color,box-shadow]",
+                "transition-[left,background-color,box-shadow,transform]",
                 "duration-500",
                 "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
@@ -504,16 +506,26 @@ export default function Header({
                   ? [
                       "left-[calc(100%-36px)]",
                       "bg-[#303030]",
-                      "shadow-black/30",
+                      "shadow-md shadow-black/30",
                     ].join(" ")
-                  : ["left-1", "bg-[#f1f1ee]", "shadow-black/5"].join(" "),
+                  : ["left-1", "bg-[#f1f1ee]", "shadow-sm shadow-black/5"].join(
+                      " ",
+                    ),
               ].join(" ")}
             >
-              {darkMode ? (
-                <MoonIcon className="text-white" />
-              ) : (
-                <SunIcon className="text-[#171717]" />
-              )}
+              <span
+                className={[
+                  "transition-[transform,opacity]",
+                  "duration-300",
+                  "ease-[cubic-bezier(0.22,1,0.36,1)]",
+                ].join(" ")}
+              >
+                {darkMode ? (
+                  <MoonIcon className="text-white" />
+                ) : (
+                  <SunIcon className="text-[#171717]" />
+                )}
+              </span>
             </span>
           </button>
         </div>

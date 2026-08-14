@@ -1058,7 +1058,8 @@ export default function HomePage() {
               {/* FOOTER INFO */}
               <div className="mt-8 border-t border-[#dcdcd7] pt-6 dark:border-[#292929]">
                 <div className="flex items-center justify-between">
-                  <div>
+                  {/* Copyright */}
+                  <div className="min-w-0">
                     <div className="text-[11px] font-semibold text-[#737373] dark:text-[#858585]">
                       © {new Date().getFullYear()} STEPHEN J.
                     </div>
@@ -1068,8 +1069,27 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#d4d4cf] text-[10px] font-bold text-[#aaa] dark:border-[#303030] dark:text-[#555]">
-                    SJ
+                  {/* Actions */}
+                  <div className="flex shrink-0 items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        window.scrollTo({
+                          top: 0,
+                          behavior: "smooth",
+                        })
+                      }
+                      className="group flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#858580] transition-colors duration-200 hover:text-[#40403d] dark:text-[#666] dark:hover:text-[#ddd]"
+                    >
+                      Top
+                      <span className="transition-transform duration-200 group-hover:-translate-y-0.5">
+                        ↑
+                      </span>
+                    </button>
+
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#d4d4cf] text-[10px] font-bold text-[#aaa] dark:border-[#303030] dark:text-[#555]">
+                      SJ
+                    </div>
                   </div>
                 </div>
               </div>

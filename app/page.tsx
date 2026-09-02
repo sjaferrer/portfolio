@@ -2606,7 +2606,6 @@ export default function HomePage() {
     </>
   );
 }
-
 function AnalyticsDashboard({
   analytics,
   now,
@@ -2621,13 +2620,17 @@ function AnalyticsDashboard({
     analytics.session.lastActivityAt,
     now,
   );
+
   const moduleEntries = Object.entries(analytics.modules);
+  const clickEntries = Object.entries(analytics.clicksByModule);
+
   const maxModuleVisits = Math.max(
     ...moduleEntries.map(([, item]) => item.visits),
     1,
   );
+
   const maxClickCount = Math.max(
-    ...Object.values(analytics.clicksByModule),
+    ...clickEntries.map(([, count]) => count),
     1,
   );
 
@@ -2639,357 +2642,637 @@ function AnalyticsDashboard({
     1,
   );
 
+  const totalMovements =
+    analytics.snake.up +
+    analytics.snake.down +
+    analytics.snake.left +
+    analytics.snake.right;
+
+  const statCards = [
+    {
+      label: "Activities",
+      value: analytics.totals.activities,
+      accent: "bg-[var(--muted)]",
+    },
+    {
+      label: "Modules",
+      value: analytics.totals.uniqueModules,
+      accent: "bg-[var(--muted)]",
+    },
+    {
+      label: "Total clicks",
+      value: analytics.totals.clicks + analytics.totals.rightClicks,
+      accent: "bg-[var(--muted)]",
+    },
+    {
+      label: "Reloads",
+      value: analytics.totals.reloads,
+      accent: "bg-[var(--muted)]",
+    },
+  ];
+
+  const gameStats = [
+    {
+      label: "Score",
+      value: analytics.snake.score,
+      icon: "◉",
+    },
+    {
+      label: "High score",
+      value: analytics.snake.highestScore,
+      icon: "↟",
+    },
+    {
+      label: "Games played",
+      value: analytics.snake.gamesPlayed,
+      icon: "◫",
+    },
+    {
+      label: "Wins",
+      value: analytics.snake.wins,
+      icon: "✓",
+    },
+    {
+      label: "Food collected",
+      value: analytics.snake.foodCollected,
+      icon: "◌",
+    },
+    {
+      label: "Game overs",
+      value: analytics.snake.gameOvers,
+      icon: "✕",
+    },
+  ];
+const movements = [
+  {
+    label: "Up",
+    value: analytics.snake.up,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2.5">
+        <path d="M12 19V5M6 11l6-6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Right",
+    value: analytics.snake.right,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2.5">
+        <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Down",
+    value: analytics.snake.down,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2.5">
+        <path d="M12 5v14M18 13l-6 6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Left",
+    value: analytics.snake.left,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2.5">
+        <path d="M19 12H5M11 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+];
+
+
+
   return (
-  <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[var(--bg)] text-[var(--text)]">
-    <header className="shrink-0 border-b border-[var(--line)] bg-[var(--bg)]/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <button
-            onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--surface)] transition-colors hover:bg-[var(--surface-2)]"
-            aria-label="Close analytics"
-          >
-            <CloseIcon />
-          </button>
+    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[var(--bg)] text-[var(--text)]">
+      {/* HEADER */}
+      <header className="shrink-0 border-b border-[var(--line)] bg-[var(--bg)]/95 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)] transition-all hover:bg-[var(--surface-2)] hover:scale-105 active:scale-95"
+              aria-label="Close analytics"
+            >
+              <CloseIcon />
+            </button>
 
-          <div className="min-w-0">
-            <div className="text-sm font-semibold">Analytics</div>
-            <div className="text-[9px] text-[var(--muted)]">
-              Game & activity overview
+            <div className="min-w-0">
+              <div className="text-sm font-bold tracking-tight">
+                Analytics
+              </div>
+
+              <div className="text-[9px] text-[var(--muted)]">
+                Game & activity overview
+              </div>
             </div>
           </div>
+
+          <div className="flex items-center gap-2 rounded-full border border-gray-300 px-2.5 py-1.5 dark:border-gray-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.8)]" />
+
+            <span className="text-[8px] font-bold uppercase tracking-[0.18em]">
+              Live
+            </span>
+          </div>
+
         </div>
+      </header>
 
-        <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.8)]" />
-          <span className="text-[8px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-            Live
-          </span>
-        </div>
-      </div>
-    </header>
+      {/* CONTENT */}
+      <main className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
+        <div className="mx-auto flex w-full max-w-[920px] flex-col gap-3">
 
-    <main className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
-      <div className="mx-auto flex w-full max-w-[920px] flex-col gap-3">
+          {/* DASHBOARD HERO */}
+          <section className="relative overflow-hidden rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(0,0,0,.04)]">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-blue-500/5 blur-3xl" />
 
-        {/* 1. SYSTEM OVERVIEW */}
-        <div className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--muted-2)]">
-              System overview
-            </div>
-          </div>
+            <div className="relative">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                  <div className="text-[8px] font-bold uppercase tracking-[0.24em] text-[var(--muted-2)]">
+                    Dashboard
+                  </div>
 
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--muted-2)]">
-                Session duration
-              </div>
-              <div className="mt-2 text-2xl font-black tracking-[-0.06em]">
-                {sessionDuration}
-              </div>
-            </div>
+                  <h1 className="mt-1 text-xl font-black tracking-[-0.04em] sm:text-2xl">
+                    Activity overview
+                  </h1>
 
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--muted-2)]">
-                Session start
-              </div>
-              <div className="mt-2 text-sm font-semibold text-[var(--text)]">
-                {new Date(analytics.session.startedAt).toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--muted-2)]">
-                Last activity
-              </div>
-              <div className="mt-2 text-sm font-semibold text-[var(--text)]">
-                {lastActivity}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--muted-2)]">
-                Activities
-              </div>
-              <div className="mt-2 text-2xl font-black tracking-[-0.06em]">
-                {analytics.totals.activities}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--muted-2)]">
-                Modules
-              </div>
-              <div className="mt-2 text-2xl font-black tracking-[-0.06em]">
-                {analytics.totals.uniqueModules}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--muted-2)]">
-                Clicks
-              </div>
-              <div className="mt-2 text-2xl font-black tracking-[-0.06em]">
-                {analytics.totals.clicks}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. GAME METRICS */}
-        <div className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
-          <div className="mb-3 text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--muted-2)]">
-            Game metrics
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            {[
-              { label: "Score", value: analytics.snake.score, icon: "◉" },
-              { label: "High score", value: analytics.snake.highestScore, icon: "↟" },
-              { label: "Games", value: analytics.snake.gamesPlayed, icon: "◫" },
-              { label: "Wins", value: analytics.snake.wins, icon: "✓" },
-              { label: "Food", value: analytics.snake.foodCollected, icon: "◌" },
-              { label: "Game overs", value: analytics.snake.gameOvers, icon: "✕" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3"
-              >
-                <div className="flex items-center justify-between text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">
-                  <span>{item.label}</span>
-                  <span>{item.icon}</span>
+                  <p className="mt-1 text-[10px] text-[var(--muted)]">
+                    Real-time session and game performance
+                  </p>
                 </div>
 
-                <div className="mt-3 text-2xl font-black tracking-[-0.06em]">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-[52px] w-[100px] shrink-0 flex-col justify-center rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2">
+                    <div className="text-[7px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">
+                      Session
+                    </div>
+
+                    <div className="mt-0.5 whitespace-nowrap text-sm font-black tracking-[-0.03em] tabular-nums">
+                      {sessionDuration}
+                    </div>
+                  </div>
+
+                  <div className="flex h-[52px] w-[100px] shrink-0 flex-col justify-center rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2">
+                    <div className="text-[7px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">
+                      Started
+                    </div>
+
+                    <div className="mt-0.5 whitespace-nowrap text-sm font-bold tabular-nums">
+                      {new Date(
+                        analytics.session.startedAt,
+                      ).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          {/* KPI GRID */}
+          <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {statCards.map((item) => (
+              <div
+                key={item.label}
+                className="relative overflow-hidden rounded-[20px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_8px_24px_rgba(0,0,0,.03)]"
+              >
+                <div
+                  className={`absolute left-0 top-0 h-0.5 w-full ${item.accent}`}
+                />
+
+                <div className="text-[7px] font-bold uppercase tracking-[0.18em] text-[var(--muted-2)]">
+                  {item.label}
+                </div>
+
+                <div className="mt-2 text-2xl font-black tracking-[-0.06em]">
                   {item.value}
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+          </section>
 
-        {/* 3. ACTIVITY OVERVIEW */}
-        <div className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
-          <div className="mb-3 text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--muted-2)]">
-            Activity overview
-          </div>
+          {/* SESSION + LAST ACTIVITY */}
+          <section className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[22px] border border-[var(--line)] bg-[var(--surface)] p-3">
+              <div className="flex items-center justify-between">
+                <div className="text-[8px] font-bold uppercase tracking-[0.2em] text-[var(--muted-2)]">
+                  Current session
+                </div>
 
-          <div className="mb-3 grid gap-2 sm:grid-cols-3">
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2.5">
-              <div className="text-[7px] uppercase tracking-[0.18em] text-[var(--muted-2)]">
-                Clicks
+                <span className="rounded-full bg-blue-500/10 px-2 py-1 text-[7px] font-bold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-400">
+                  Active
+                </span>
               </div>
-              <div className="mt-1 text-lg font-black tracking-[-0.05em]">
-                {analytics.totals.clicks}
+
+              <div className="mt-4 text-3xl font-black tracking-[-0.07em]">
+                {sessionDuration}
+              </div>
+
+              <div className="mt-1 text-[9px] text-[var(--muted)]">
+                Session duration
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2.5">
-              <div className="text-[7px] uppercase tracking-[0.18em] text-[var(--muted-2)]">
-                Right clicks
+            <div className="rounded-[22px] border border-[var(--line)] bg-[var(--surface)] p-3">
+              <div className="text-[8px] font-bold uppercase tracking-[0.2em] text-[var(--muted-2)]">
+                Last activity
               </div>
-              <div className="mt-1 text-lg font-black tracking-[-0.05em]">
-                {analytics.totals.rightClicks}
+
+              <div className="mt-4 text-3xl font-black tracking-[-0.07em]">
+                {lastActivity}
+              </div>
+
+              <div className="mt-1 text-[9px] text-[var(--muted)]">
+                Most recent interaction
+              </div>
+            </div>
+          </section>
+
+          {/* GAME PERFORMANCE */}
+          <section className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <div className="text-[8px] font-bold uppercase tracking-[0.22em] text-[var(--muted-2)]">
+                  Game performance
+                </div>
+
+                <div className="mt-1 text-sm font-bold">
+                  Snake statistics
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[var(--line)] bg-[var(--bg)] px-2.5 py-1.5">
+                <div className="text-[7px] uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                  Total movements
+                </div>
+
+                <div className="mt-0.5 text-sm font-black">
+                  {analytics.snake.movements}
+                </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2.5">
-              <div className="text-[7px] uppercase tracking-[0.18em] text-[var(--muted-2)]">
-                Reloads
-              </div>
-              <div className="mt-1 text-lg font-black tracking-[-0.05em]">
-                {analytics.totals.reloads}
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-3 text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--muted-2)]">
-            Module activity
-          </div>
-
-          <div className="space-y-3">
-            {moduleEntries.length === 0 ? (
-              <div className="rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-[11px] text-[var(--muted)]">
-                No module visits yet.
-              </div>
-            ) : (
-              moduleEntries.map(([name, item]) => (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {gameStats.map((item) => (
                 <div
-                  key={name}
-                  className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2.5"
+                  key={item.label}
+                  className="group rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3 transition-colors hover:bg-[var(--surface-2)]"
                 >
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-semibold text-[var(--text)]">
-                      {name}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                      {item.label}
                     </span>
 
-                    <span className="text-[8px] uppercase tracking-[0.16em] text-[var(--muted-2)]">
-                      {item.visits} visits
+                    <span className="text-[11px] text-[var(--muted-2)] transition-colors group-hover:text-[var(--text)]">
+                      {item.icon}
                     </span>
                   </div>
 
-                  <div className="h-2 overflow-hidden rounded-full bg-[var(--surface)]">
-                    <div
-                      className="h-full rounded-full bg-[var(--text)]"
-                      style={{
-                        width: `${(item.visits / maxModuleVisits) * 100}%`,
-                      }}
-                    />
-                  </div>
-
-                  <div className="mt-1 flex justify-between text-[7px] uppercase tracking-[0.18em] text-[var(--muted-2)]">
-                    <span>{formatDuration(item.totalTimeMs)}</span>
-                    <span>{item.active ? "Active" : "Seen"}</span>
+                  <div className="mt-3 text-2xl font-black tracking-[-0.06em]">
+                    {item.value}
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </div>
+              ))}
+            </div>
+          </section>
 
-        {/* 4. GAME MOVEMENT */}
-        <div className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
-          <div className="mb-3 text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--muted-2)]">
-            Game Movement
-          </div>
+          {/* TWO COLUMN ANALYTICS */}
+          <section className="grid gap-3 lg:grid-cols-2">
 
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2">
-              <div className="text-[11px] font-black">↑</div>
-              <div className="mt-1 text-[9px] text-[var(--muted)]">
-                {analytics.snake.up}
+            {/* MODULE ACTIVITY */}
+            <div className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="text-[8px] font-bold uppercase tracking-[0.22em] text-[var(--muted-2)]">
+                    Module activity
+                  </div>
+
+                  <div className="mt-1 text-sm font-bold">
+                    Most visited modules
+                  </div>
+                </div>
+
+                <div className="rounded-full border border-[var(--line)] bg-[var(--bg)] px-2 py-1 text-[7px] font-bold uppercase tracking-[0.14em] text-[var(--muted-2)]">
+                  {moduleEntries.length} tracked
+                </div>
+              </div>
+
+              {moduleEntries.length === 0 ? (
+                <div className="flex min-h-[120px] items-center justify-center rounded-2xl border border-dashed border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-[10px] text-[var(--muted)]">
+                  No module visits yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {moduleEntries.map(([name, item]) => {
+                    const percentage =
+                      (item.visits / maxModuleVisits) * 100;
+
+                    return (
+                      <div key={name}>
+                        <div className="mb-1.5 flex items-center justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                                item.active
+                                  ? "bg-emerald-500"
+                                  : "bg-[var(--muted-2)]"
+                              }`}
+                            />
+
+                            <span className="truncate text-[9px] font-semibold">
+                              {name}
+                            </span>
+                          </div>
+
+                          <span className="shrink-0 text-[8px] font-bold text-[var(--muted)]">
+                            {item.visits}
+                          </span>
+                        </div>
+
+                        <div className="h-1.5 overflow-hidden rounded-full bg-[var(--bg)]">
+                          <div
+                            className="h-full rounded-full bg-[var(--text)] transition-all duration-500"
+                            style={{
+                              width: `${percentage}%`,
+                            }}
+                          />
+                        </div>
+
+                        <div className="mt-1 flex justify-between text-[7px] uppercase tracking-[0.14em] text-[var(--muted-2)]">
+                          <span>
+                            {formatDuration(item.totalTimeMs)}
+                          </span>
+
+                          <span>
+                            {item.active ? "Active now" : "Seen"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* CLICK ACTIVITY */}
+            <div className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="text-[8px] font-bold uppercase tracking-[0.22em] text-[var(--muted-2)]">
+                    Click activity
+                  </div>
+
+                  <div className="mt-1 text-sm font-bold">
+                    Interaction breakdown
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-[7px] uppercase tracking-[0.14em] text-[var(--muted-2)]">
+                    Total
+                  </div>
+
+                  <div className="text-sm font-black">
+                    {analytics.totals.clicks +
+                      analytics.totals.rightClicks}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4 grid grid-cols-2 gap-2">
+                <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2.5">
+                  <div className="text-[7px] uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                    Left clicks
+                  </div>
+
+                  <div className="mt-1 text-xl font-black">
+                    {analytics.totals.clicks}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2.5">
+                  <div className="text-[7px] uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                    Right clicks
+                  </div>
+
+                  <div className="mt-1 text-xl font-black">
+                    {analytics.totals.rightClicks}
+                  </div>
+                </div>
+              </div>
+
+              {clickEntries.length === 0 ? (
+                <div className="flex min-h-[90px] items-center justify-center rounded-2xl border border-dashed border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-[10px] text-[var(--muted)]">
+                  No meaningful clicks recorded yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {clickEntries.map(([moduleName, count]) => {
+                    const percentage =
+                      (count / maxClickCount) * 100;
+
+                    return (
+                      <div key={moduleName}>
+                        <div className="mb-1.5 flex items-center justify-between gap-2">
+                          <span className="truncate text-[9px] font-semibold">
+                            {moduleName}
+                          </span>
+
+                          <span className="text-[8px] font-bold text-[var(--muted)]">
+                            {count}
+                          </span>
+                        </div>
+
+                        <div className="h-1.5 overflow-hidden rounded-full bg-[var(--bg)]">
+                          <div
+                            className="h-full rounded-full bg-[var(--text)] transition-all duration-500"
+                            style={{
+                              width: `${percentage}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* MOVEMENT */}
+          <section className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <div className="text-[8px] font-bold uppercase tracking-[0.22em] text-[var(--muted-2)]">
+                  Game movement
+                </div>
+
+                <div className="mt-1 text-sm font-bold">
+                  Direction distribution
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-1.5 text-right">
+                <div className="text-[7px] uppercase tracking-[0.15em] text-[var(--muted-2)]">
+                  Movements
+                </div>
+
+                <div className="text-sm font-black">
+                  {analytics.snake.movements}
+                </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2">
-              <div className="text-[11px] font-black">→</div>
-              <div className="mt-1 text-[9px] text-[var(--muted)]">
-                {analytics.snake.right}
-              </div>
-            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {movements.map((movement) => {
+                const percentage =
+                  (movement.value / movementMax) * 100;
 
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2">
-              <div className="text-[11px] font-black">↓</div>
-              <div className="mt-1 text-[9px] text-[var(--muted)]">
-                {analytics.snake.down}
-              </div>
-            </div>
-
-            <div className="col-span-3 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2">
-              <div className="text-[7px] uppercase tracking-[0.18em] text-[var(--muted-2)]">
-                Total movements
-              </div>
-
-              <div className="mt-1 text-xl font-black tracking-[-0.06em]">
-                {analytics.snake.movements}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 5. CLICKS */}
-        <div className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
-          <div className="mb-3 text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--muted-2)]">
-            Clicks
-          </div>
-
-          <div className="space-y-2">
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2.5 text-[10px] text-[var(--text)]">
-              <div className="flex items-center justify-between">
-                <span className="uppercase tracking-[0.16em] text-[var(--muted-2)]">
-                  Total
-                </span>
-
-                <span className="font-black">
-                  {analytics.totals.clicks + analytics.totals.rightClicks}
-                </span>
-              </div>
-            </div>
-
-            {Object.entries(analytics.clicksByModule).length > 0 ? (
-              Object.entries(analytics.clicksByModule).map(
-                ([moduleName, count]) => (
+                return (
                   <div
-                    key={moduleName}
-                    className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-2.5"
+                    key={movement.label}
+                    className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3"
                   >
-                    <div className="mb-1 flex items-center justify-between text-[9px]">
-                      <span className="uppercase tracking-[0.16em] text-[var(--muted-2)]">
-                        {moduleName}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                        {movement.label}
                       </span>
 
-                      <span className="font-semibold">{count}</span>
+                      <span className="text-lg font-black">
+                        {movement.icon}
+                      </span>
                     </div>
 
-                    <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface)]">
+                    <div className="mt-3 text-xl font-black tracking-[-0.05em]">
+                      {movement.value}
+                    </div>
+
+                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface)]">
                       <div
-                        className="h-full rounded-full bg-[var(--text)]"
+                        className="h-full rounded-full bg-[var(--text)] transition-all duration-500"
                         style={{
-                          width: `${(count / maxClickCount) * 100}%`,
+                          width: `${percentage}%`,
                         }}
                       />
                     </div>
                   </div>
-                )
-              )
-            ) : (
-              <div className="rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-[11px] text-[var(--muted)]">
-                No meaningful clicks recorded yet.
+                );
+              })}
+            </div>
+
+            <div className="mt-3 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[8px] font-bold uppercase tracking-[0.18em] text-[var(--muted-2)]">
+                  Total directional input
+                </span>
+
+                <span className="text-lg font-black">
+                  {totalMovements}
+                </span>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </section>
 
-        {/* 6. RECENT ACTIVITY */}
-        <div className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
-          <div className="mb-3 text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--muted-2)]">
-            Recent activity
-          </div>
+          {/* RECENT ACTIVITY */}
+          <section className="rounded-[24px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <div className="text-[8px] font-bold uppercase tracking-[0.22em] text-[var(--muted-2)]">
+                  Recent activity
+                </div>
 
-          <div className="space-y-2">
+                <div className="mt-1 text-sm font-bold">
+                  Latest events
+                </div>
+              </div>
+
+              <div className="rounded-full border border-[var(--line)] bg-[var(--bg)] px-2 py-1 text-[7px] font-bold uppercase tracking-[0.14em] text-[var(--muted-2)]">
+                {analytics.events.length} events
+              </div>
+            </div>
+
             {analytics.events.length === 0 ? (
-              <div className="rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-[11px] text-[var(--muted)]">
+              <div className="flex min-h-[100px] items-center justify-center rounded-2xl border border-dashed border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-[10px] text-[var(--muted)]">
                 No activity yet.
               </div>
             ) : (
-              analytics.events.map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-start justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--bg)] px-2.5 py-2"
-                >
-                  <div className="flex min-w-0 items-start gap-2">
-                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--text)]" />
+              <div className="relative">
+                <div className="absolute bottom-2 left-[7px] top-2 w-px bg-[var(--line)]" />
 
-                    <div className="min-w-0">
-                      <div className="text-[10px] font-semibold text-[var(--text)]">
-                        {event.action}
+                <div className="space-y-1">
+                  {analytics.events.map((event) => (
+                    <div
+                      key={event.id}
+                      className="relative flex items-start justify-between gap-3 rounded-2xl px-2.5 py-2.5 transition-colors hover:bg-[var(--bg)]"
+                    >
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="relative z-10 mt-1 h-2 w-2 shrink-0 rounded-full border-2 border-[var(--surface)] bg-[var(--text)] shadow-[0_0_0_2px_var(--line)]" />
+
+                        <div className="min-w-0">
+                          <div className="truncate text-[10px] font-semibold">
+                            {event.action}
+                          </div>
+
+                          <div className="mt-0.5 text-[7px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                            {event.module}
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="mt-0.5 text-[7px] uppercase tracking-[0.16em] text-[var(--muted-2)]">
-                        {event.module}
+                      <div className="shrink-0 pt-0.5 text-[7px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-2)]">
+                        {formatRelativeTime(event.timestamp, now)}
                       </div>
                     </div>
-                  </div>
-
-                  <div className="shrink-0 text-[8px] uppercase tracking-[0.14em] text-[var(--muted-2)]">
-                    {formatRelativeTime(event.timestamp, now)}
-                  </div>
+                  ))}
                 </div>
-              ))
+              </div>
             )}
-          </div>
+          </section>
+
+          {/* FOOTER SUMMARY */}
+          <section className="grid grid-cols-3 gap-2 pb-2">
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-center">
+              <div className="text-[7px] font-bold uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                Activities
+              </div>
+
+              <div className="mt-1 text-lg font-black">
+                {analytics.totals.activities}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-center">
+              <div className="text-[7px] font-bold uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                Modules
+              </div>
+
+              <div className="mt-1 text-lg font-black">
+                {analytics.totals.uniqueModules}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-center">
+              <div className="text-[7px] font-bold uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                Events
+              </div>
+
+              <div className="mt-1 text-lg font-black">
+                {analytics.events.length}
+              </div>
+            </div>
+          </section>
         </div>
-
-      </div>
-    </main>
-  </div>
-);
-
+      </main>
+    </div>
+  );
 }
+
 
 /* ============================================================
    SMART PORTFOLIO CHAT
@@ -5013,7 +5296,7 @@ useEffect(() => {
 
 return (
   <div
-    className="fixed inset-x-0 top-0 flex min-h-0 flex-col overflow-hidden bg-[var(--bg)] text-[var(--text)]"
+    className="absolute inset-0 flex min-h-0 flex-col overflow-hidden bg-[var(--bg)] text-[var(--text)]"
     style={{
       height: viewportHeight ? `${viewportHeight}px` : "100dvh",
     }}

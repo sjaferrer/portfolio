@@ -1,36 +1,15 @@
 @import "tailwindcss";
 
+/* ============================================================
+   ROOT / GLOBAL
+============================================================ */
+
 :root {
   --background: #ffffff;
-  --foreground: #111827; /* gray-900 */
-  --accent: #0a66c2; /* LinkedIn blue */
-}
+  --foreground: #111827;
+  --accent: #0a66c2;
 
-body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-}
-
-a {
-  color: var(--accent);
-}
-
-.card {
-  background: #ffffff;
-  border: 1px solid rgba(17, 24, 39, 0.06); /* subtle border */
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
-}
-.no-scrollbar::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-:root {
+  /* SAP COLORS */
   --sap-blue: #0a6ed1;
   --sap-blue-dark: #354a5f;
 
@@ -45,9 +24,192 @@ a {
   --sap-warning: #e9730c;
   --sap-error: #bb0000;
 }
-/* [data-next-badge="true"] {
-  display: none !important;
-} */
+
+/* ============================================================
+   BASE
+============================================================ */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+
+  background: var(--background);
+  color: var(--foreground);
+
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   LINKS
+============================================================ */
+
+a {
+  color: var(--accent);
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+/* ============================================================
+   CARD
+============================================================ */
+
+.card {
+  background: #ffffff;
+  border: 1px solid rgba(17, 24, 39, 0.06);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+}
+
+.ui-card {
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ui-card:hover {
+  border-color: #d6d6d1;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.045);
+}
+
+.ui-card:not(button):not(a) {
+  cursor: default;
+}
+
+/* ============================================================
+   SIDEBAR / MAIN LAYOUT
+   ============================================================
+
+   IMPORTANT:
+
+   Your React component sets:
+
+   --desktop-sidebar-width
+
+   Example:
+   260px = expanded
+   72px  = collapsed
+   0px   = closed
+
+   The main content uses this value automatically.
+============================================================ */
+
+.portfolio-main {
+  /*
+   * Desktop sidebar pushes the main content.
+   */
+  margin-left: var(--desktop-sidebar-width, 0px);
+
+  /*
+   * Smoothly follow sidebar open/collapse/close.
+   */
+  transition:
+    margin-left 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 300ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /*
+   * Prevent the main content from creating horizontal overflow.
+   */
+  width: calc(100% - var(--desktop-sidebar-width, 0px));
+
+  min-width: 0;
+
+  /*
+   * Keep content from causing the entire page to scroll sideways.
+   */
+  max-width: 100%;
+}
+
+/*
+ * Desktop sidebar itself.
+ *
+ * This works with your existing Tailwind classes:
+ *
+ * fixed
+ * left-0
+ * top-0
+ * bottom-0
+ * lg:block
+ * transition-all
+ * duration-300
+ */
+@media (min-width: 1024px) {
+  .portfolio-main {
+    margin-left: var(--desktop-sidebar-width, 0px);
+    width: calc(100% - var(--desktop-sidebar-width, 0px));
+  }
+}
+
+/*
+ * Tablet/mobile:
+ *
+ * The desktop sidebar has lg:block, so below 1024px
+ * the sidebar is hidden and main content must occupy
+ * the entire viewport.
+ */
+@media (max-width: 1023px) {
+  .portfolio-main {
+    margin-left: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* ============================================================
+   SIDEBAR SAFETY
+============================================================ */
+
+/*
+ * Prevent sidebar content from causing horizontal overflow.
+ */
+aside {
+  max-width: 100vw;
+}
+
+/*
+ * Sidebar transitions should use transform smoothly.
+ */
+@media (min-width: 1024px) {
+  aside {
+    will-change: transform, width;
+  }
+}
+
+/* ============================================================
+   NO SCROLLBAR
+============================================================ */
+
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 /* ============================================================
    SECTION / CARD MOTION
 ============================================================ */
@@ -72,42 +234,12 @@ a {
   width: 100%;
 }
 
-/* Subtle card transition.
-   No exaggerated movement or scaling. */
-.ui-card {
-  transition:
-    border-color 180ms ease,
-    background-color 180ms ease,
-    box-shadow 180ms ease;
-}
+/* ============================================================
+   DARK MODE VARIANT
+============================================================ */
 
-.ui-card:hover {
-  border-color: #d6d6d1;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.045);
-}
-
-/* Only interactive elements receive a pointer cursor */
-button,
-a {
-  cursor: pointer;
-}
-
-/* Non-clickable cards/text stay with the normal cursor */
-.ui-card:not(button):not(a) {
-  cursor: default;
-}
-
-/* Respect accessibility preferences */
-@media (prefers-reduced-motion: reduce) {
-  .section-reveal {
-    animation: none;
-  }
-
-  .ui-card {
-    transition: none;
-  }
-}
 @custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================================
    RADIAL THEME TRANSITION
 ============================================================ */
@@ -126,8 +258,7 @@ a {
 }
 
 /*
- * The new theme starts as a tiny circle at the theme button
- * and expands until it covers the entire viewport.
+ * New theme starts as a tiny circle and expands.
  */
 ::view-transition-new(root) {
   z-index: 2;
@@ -147,19 +278,8 @@ a {
   }
 }
 
-/*
- * Respect reduced-motion accessibility settings.
- */
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation-duration: 0.01ms !important;
-  }
-}
 /* ============================================================
    PRELOADER THEME
-   ------------------------------------------------------------
-   Uses the theme class immediately, without waiting for React.
 ============================================================ */
 
 .preloader {
@@ -201,38 +321,53 @@ html.dark .preloader-dot {
 html.dark .preloader-text {
   color: #666666;
 }
+
 /* ============================================================
-   THEME TRANSITION
+   WOBBLE
 ============================================================ */
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-::view-transition-old(root) {
-  z-index: 1;
-}
-
-::view-transition-new(root) {
-  z-index: 9999;
-  animation: theme-reveal 550ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes theme-reveal {
-  from {
-    clip-path: circle(0px at var(--theme-x) var(--theme-y));
+@keyframes wobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
   }
 
-  to {
-    clip-path: circle(var(--theme-radius) at var(--theme-x) var(--theme-y));
+  25% {
+    transform: rotate(-8deg);
+  }
+
+  50% {
+    transform: rotate(8deg);
+  }
+
+  75% {
+    transform: rotate(-5deg);
   }
 }
+
+/* ============================================================
+   ACCESSIBILITY
+============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
+  .section-reveal {
+    animation: none;
+  }
+
+  .ui-card {
+    transition: none;
+  }
+
+  .portfolio-main {
+    transition: none;
+  }
+
+  aside {
+    transition: none !important;
+  }
+
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation: none !important;
+    animation-duration: 0.01ms !important;
   }
 }

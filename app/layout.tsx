@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import "devicon/devicon.min.css";
+// import "devicon/devicon.min.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stephen J. - Full Stack Developer",
-  description: "I'm Stephen from the PH",
+  title: "Stephen — Full-Stack Developer",
+  description: "I'm Stephen, a full-stack developer from Davao City, Philippines, building modern, scalable, and user-focused web applications.",
 };
 
 /* ============================================================

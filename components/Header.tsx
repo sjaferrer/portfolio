@@ -41,16 +41,8 @@ export default function Header({
   desktopSidebarCollapsed,
 }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
-
-  /*
-   * Start false so server and client HTML match.
-   * layout.tsx should already apply .dark before paint.
-   */
   const [darkMode, setDarkMode] = useState(false);
 
-  /*
-   * Prevent rapid/spammed theme clicks.
-   */
   const themeTransitionRunning = useRef(false);
 
   /* ============================================================
@@ -62,7 +54,6 @@ export default function Header({
     const isDark = root.classList.contains("dark");
 
     setDarkMode(isDark);
-
     root.style.colorScheme = isDark ? "dark" : "light";
   }, []);
 
@@ -79,7 +70,7 @@ export default function Header({
       ticking = true;
 
       window.requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 12);
+        setScrolled(window.scrollY > 16);
         ticking = false;
       });
     }
@@ -100,22 +91,12 @@ export default function Header({
   ============================================================ */
 
   function toggleTheme(event: MouseEvent<HTMLButtonElement>) {
-    /*
-     * Ignore additional clicks while the current transition
-     * is still running.
-     */
-    if (themeTransitionRunning.current) {
-      return;
-    }
+    if (themeTransitionRunning.current) return;
 
     themeTransitionRunning.current = true;
 
     const root = document.documentElement;
     const nextDarkMode = !darkMode;
-
-    /* ========================================================
-       FIND TOGGLE CENTER
-    ======================================================== */
 
     const button = event.currentTarget;
     const rect = button.getBoundingClientRect();
@@ -123,18 +104,10 @@ export default function Header({
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
 
-    /* ========================================================
-       CALCULATE VIEWPORT RADIUS
-    ======================================================== */
-
     const radius = Math.hypot(
       Math.max(x, window.innerWidth - x),
       Math.max(y, window.innerHeight - y),
     );
-
-    /* ========================================================
-       CSS VARIABLES
-    ======================================================== */
 
     root.style.setProperty("--theme-x", `${x}px`);
     root.style.setProperty("--theme-y", `${y}px`);
@@ -142,17 +115,12 @@ export default function Header({
 
     let themeChanged = false;
 
-    /* ========================================================
-       ACTUALLY CHANGE THE THEME
-    ======================================================== */
-
     const changeTheme = () => {
       if (themeChanged) return;
 
       themeChanged = true;
 
       root.classList.toggle("dark", nextDarkMode);
-
       root.style.colorScheme = nextDarkMode ? "dark" : "light";
 
       localStorage.setItem("theme", nextDarkMode ? "dark" : "light");
@@ -160,26 +128,14 @@ export default function Header({
       setDarkMode(nextDarkMode);
     };
 
-    /* ========================================================
-       REDUCED MOTION
-    ======================================================== */
-
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-
-    /* ========================================================
-       VIEW TRANSITION API
-    ======================================================== */
 
     const transitionDocument = document as ViewTransitionDocument;
 
     const startViewTransition = transitionDocument.startViewTransition;
 
-    /*
-     * Browser doesn't support View Transition API
-     * or user prefers reduced motion.
-     */
     if (!startViewTransition || prefersReducedMotion) {
       changeTheme();
 
@@ -193,10 +149,6 @@ export default function Header({
       return;
     }
 
-    /* ========================================================
-       START VIEW TRANSITION
-    ======================================================== */
-
     try {
       const transition = startViewTransition.call(
         transitionDocument,
@@ -205,24 +157,14 @@ export default function Header({
 
       transition.finished
         .catch(() => {
-          /*
-           * Make sure the theme still changes if the browser
-           * cancels the animation.
-           */
           changeTheme();
         })
         .finally(() => {
-          /*
-           * Small buffer prevents immediate re-triggering.
-           */
           window.setTimeout(() => {
             themeTransitionRunning.current = false;
           }, 150);
         });
     } catch {
-      /*
-       * Fallback if View Transition throws.
-       */
       changeTheme();
 
       window.setTimeout(() => {
@@ -253,49 +195,79 @@ export default function Header({
   return (
     <header
       className={[
-        "fixed inset-x-0 top-0 z-40",
+        "fixed top-0 right-0 z-40",
 
-        desktopSidebarCollapsed ? "lg:left-[88px]" : "lg:left-[300px]",
+        /*
+         * MOBILE + TABLET
+         * Sidebar is an overlay, so header occupies the
+         * entire viewport.
+         */
+        "left-0",
+
+        /*
+         * DESKTOP
+         * Sidebar becomes part of the page layout.
+         */
+        desktopSidebarCollapsed ? "lg:left-[88px]" : "lg:left-[224px]",
+
+        /*
+         * Must match sidebar header height.
+         */
+        "h-[72px]",
 
         "border-b",
 
-        /*
-         * Smooth header/sidebar movement.
-         */
         "transition-[left,background-color,border-color,box-shadow]",
-        "duration-500",
+        "duration-300",
         "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
         scrolled
           ? [
-              "border-[#e3e3df] dark:border-[#2a2a2a]",
-              "bg-[#fbfbfa]/95 dark:bg-[#111111]/95",
-              "shadow-sm shadow-black/[0.025]",
-              "dark:shadow-black/20",
+              "border-[#e5e5e2]",
+              "dark:border-[#292929]",
+
+              "bg-[#fafaf8]/95",
+              "dark:bg-[#151515]/95",
+
+              "shadow-[0_8px_30px_rgba(0,0,0,0.035)]",
+              "dark:shadow-[0_8px_30px_rgba(0,0,0,0.18)]",
+
               "backdrop-blur-xl",
             ].join(" ")
           : [
-              "border-transparent",
-              "bg-[#fbfbfa]/90 dark:bg-[#111111]/90",
+              "border-[#e5e5e2]",
+              "dark:border-[#292929]",
+
+              "bg-[#fafaf8]/90",
+              "dark:bg-[#151515]/90",
+
               "backdrop-blur-md",
             ].join(" "),
       ].join(" ")}
     >
       <div
         className={[
-          "flex w-full items-center justify-between",
+          "flex h-full w-full items-center justify-between",
+
+          /*
+           * Responsive horizontal padding.
+           *
+           * Mobile: 16px
+           * Small: 20px
+           * Tablet: 24px
+           * Desktop: 32px
+           */
           "px-4 sm:px-5 md:px-6 lg:px-8",
-          "h-[64px] md:h-[68px] lg:h-[72px]",
         ].join(" ")}
       >
         {/* ==================================================
-            LEFT
-        ================================================== */}
+          LEFT
+      ================================================== */}
 
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center">
           {/* ==================================================
-              MOBILE / TABLET MENU
-          ================================================== */}
+            MOBILE / TABLET MENU
+        ================================================== */}
 
           <button
             type="button"
@@ -303,103 +275,104 @@ export default function Header({
             aria-label="Open navigation menu"
             aria-controls="primary-navigation"
             className={[
-              "flex h-10 w-10 shrink-0 cursor-pointer",
-              "items-center justify-center rounded-xl",
+              "group mr-3 flex h-9 w-9 shrink-0",
+              "items-center justify-center",
+              "rounded-lg",
 
-              "border border-[#e2e2de]",
-              "dark:border-[#2d2d2d]",
+              "border border-[#dfdfda]",
+              "dark:border-[#2c2c2c]",
 
-              "bg-white dark:bg-[#1b1b1b]",
+              "bg-white/80",
+              "dark:bg-[#181818]/80",
 
-              "text-[#40403d] dark:text-[#e5e5e5]",
+              "text-[#343432]",
+              "dark:text-[#ddddda]",
 
-              "transition-[background-color,border-color,transform]",
-              "duration-300",
+              "transition-all duration-300",
               "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
-              "hover:border-[#d5d5d1]",
-              "dark:hover:border-[#3a3a3a]",
+              "hover:border-[#cfcfca]",
+              "dark:hover:border-[#404040]",
 
-              "hover:bg-[#f1f1ee]",
-              "dark:hover:bg-[#252525]",
+              "hover:bg-white",
+              "dark:hover:bg-[#202020]",
 
-              "active:scale-[0.96]",
+              "active:scale-95",
 
               "focus:outline-none",
               "focus-visible:ring-2",
               "focus-visible:ring-[#171717]/10",
+              "dark:focus-visible:ring-white/10",
 
-              "md:h-10 md:w-10",
+              /*
+               * Menu is needed while sidebar is an overlay.
+               */
               "lg:hidden",
             ].join(" ")}
           >
             <MenuIcon />
           </button>
 
-          {/* ==================================================
-              CURRENT SECTION
-          ================================================== */}
-
           <button
             type="button"
             onClick={() => handleNavigate(normalizedModule)}
             aria-label={`Current section: ${displayModule}`}
             className={[
-              "group flex min-w-0 cursor-pointer flex-col",
-              "rounded-lg px-1 py-1 text-left",
+              "group relative flex min-w-0 items-center",
+              "rounded-lg",
+              "text-left",
+
+              "transition-colors duration-200",
 
               "focus:outline-none",
               "focus-visible:ring-2",
-              "focus-visible:ring-[#171717]/10",
+              "focus-visible:ring-[#171717]",
+              "dark:focus-visible:ring-white",
             ].join(" ")}
           >
+            {/* ACTIVE INDICATOR — matches sidebar */}
             <span
               className={[
-                "max-w-[180px] truncate",
+                "mr-3 h-4 w-0.5 shrink-0",
+                "rounded-full",
+                "bg-[#171717] dark:bg-white",
 
-                "text-[14px] font-bold leading-tight",
-                "tracking-[-0.01em]",
+                "transition-transform duration-200",
+                "group-hover:scale-y-125",
+              ].join(" ")}
+            />
 
-                "text-[#171717] dark:text-[#f5f5f5]",
+            {/* CURRENT SECTION */}
+            <span
+              className={[
+                "truncate",
 
-                "transition-[color,transform]",
-                "duration-300",
-                "ease-[cubic-bezier(0.22,1,0.36,1)]",
+                "font-sans",
+                "text-[14px]",
+                "font-bold",
+                "leading-none",
+                "tracking-[-0.015em]",
 
-                "group-hover:text-[#40403d]",
-                "dark:group-hover:text-white",
+                "text-[#171717]",
+                "dark:text-white",
 
-                "group-hover:translate-x-[1px]",
+                "transition-transform duration-200",
+                "group-hover:translate-x-[2px]",
 
-                "sm:max-w-[240px]",
-                "sm:text-[15px]",
+                "max-w-[130px]",
+                "sm:max-w-[180px]",
+                "md:max-w-[240px]",
+                "lg:max-w-[280px]",
               ].join(" ")}
             >
               {displayModule}
-            </span>
-
-            <span
-              className={[
-                "mt-1 truncate",
-
-                "text-[9px] font-semibold uppercase",
-                "tracking-[0.16em]",
-
-                "text-[#a0a09d] dark:text-[#777]",
-
-                "transition-colors duration-300",
-
-                "sm:text-[10px]",
-              ].join(" ")}
-            >
-              Stephen J. / Portfolio
             </span>
           </button>
         </div>
 
         {/* ==================================================
-            RIGHT — THEME TOGGLE
-        ================================================== */}
+          RIGHT
+      ================================================== */}
 
         <div className="flex shrink-0 items-center">
           <button
@@ -410,122 +383,100 @@ export default function Header({
             }
             aria-pressed={darkMode}
             className={[
-              "relative flex h-10 w-[72px] cursor-pointer",
-              "items-center rounded-full border",
+              "relative flex",
+              "h-[30px] w-[56px]",
+              "sm:h-[32px] sm:w-[60px]",
+              "items-center",
+              "rounded-full",
+              "border",
 
-              /*
-               * Smooth physical-style movement.
-               */
-              "transition-[background-color,border-color,transform,box-shadow]",
-              "duration-500",
+              "transition-all duration-500",
               "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
-              "hover:scale-[1.02]",
-              "active:scale-[0.98]",
+              "hover:scale-[1.025]",
+              "active:scale-[0.97]",
 
               "focus:outline-none",
               "focus-visible:ring-2",
               "focus-visible:ring-[#171717]/10",
-
-              "md:h-11 md:w-[78px]",
+              "dark:focus-visible:ring-white/10",
 
               darkMode
                 ? [
-                    "border-[#333]",
-                    "bg-[#1c1c1c]",
+                    "border-[#343434]",
+                    "bg-[#1b1b1b]",
                     "shadow-inner shadow-black/20",
                   ].join(" ")
                 : [
-                    "border-[#e2e2de]",
+                    "border-[#deded9]",
                     "bg-white",
                     "shadow-inner shadow-black/[0.025]",
                   ].join(" "),
             ].join(" ")}
           >
-            {/* ==================================================
-                SUN ICON
-            ================================================== */}
-
+            {/* SUN */}
             <span
               className={[
-                "absolute left-[9px]",
-
-                "transition-[opacity,transform,color]",
-                "duration-500",
-                "ease-[cubic-bezier(0.22,1,0.36,1)]",
-
+                "absolute",
+                "left-[7px]",
+                "transition-all duration-300",
                 darkMode ? "scale-75 opacity-30" : "scale-100 opacity-100",
               ].join(" ")}
             >
               <SunIcon
-                className={darkMode ? "text-[#777]" : "text-[#171717]"}
+                className={darkMode ? "text-[#888]" : "text-[#292927]"}
               />
             </span>
 
-            {/* ==================================================
-                MOON ICON
-            ================================================== */}
-
+            {/* MOON */}
             <span
               className={[
-                "absolute right-[9px]",
-
-                "transition-[opacity,transform,color]",
-                "duration-500",
-                "ease-[cubic-bezier(0.22,1,0.36,1)]",
-
+                "absolute",
+                "right-[7px]",
+                "transition-all duration-300",
                 darkMode ? "scale-100 opacity-100" : "scale-75 opacity-30",
               ].join(" ")}
             >
-              <MoonIcon className={darkMode ? "text-white" : "text-[#888]"} />
+              <MoonIcon
+                className={darkMode ? "text-[#e9e9e6]" : "text-[#888]"}
+              />
             </span>
 
-            {/* ==================================================
-                SLIDING KNOB
-            ================================================== */}
-
+            {/* KNOB */}
             <span
               className={[
                 "absolute top-1/2",
                 "-translate-y-1/2",
 
-                "flex h-8 w-8",
+                "flex",
+                "h-6 w-6",
+
                 "items-center justify-center",
                 "rounded-full",
 
-                /*
-                 * Smooth physical movement.
-                 */
-                "transition-[left,background-color,box-shadow,transform]",
+                "transition-[left,background-color,box-shadow]",
                 "duration-500",
                 "ease-[cubic-bezier(0.22,1,0.36,1)]",
 
-                "md:h-9 md:w-9",
-
                 darkMode
                   ? [
-                      "left-[calc(100%-36px)]",
+                      "left-[calc(100%-28px)]",
+                      "sm:left-[calc(100%-28px)]",
                       "bg-[#303030]",
-                      "shadow-md shadow-black/30",
+                      "shadow-[0_2px_6px_rgba(0,0,0,0.35)]",
                     ].join(" ")
-                  : ["left-1", "bg-[#f1f1ee]", "shadow-sm shadow-black/5"].join(
-                      " ",
-                    ),
+                  : [
+                      "left-[3px]",
+                      "bg-[#f1f1ee]",
+                      "shadow-[0_2px_6px_rgba(0,0,0,0.08)]",
+                    ].join(" "),
               ].join(" ")}
             >
-              <span
-                className={[
-                  "transition-[transform,opacity]",
-                  "duration-300",
-                  "ease-[cubic-bezier(0.22,1,0.36,1)]",
-                ].join(" ")}
-              >
-                {darkMode ? (
-                  <MoonIcon className="text-white" />
-                ) : (
-                  <SunIcon className="text-[#171717]" />
-                )}
-              </span>
+              {darkMode ? (
+                <MoonIcon className="text-white" />
+              ) : (
+                <SunIcon className="text-[#222220]" />
+              )}
             </span>
           </button>
         </div>
@@ -544,11 +495,11 @@ function MenuIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
-      className="h-5 w-5"
+      strokeWidth="1.7"
+      className="h-[18px] w-[18px]"
       aria-hidden="true"
     >
-      <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+      <path strokeLinecap="round" d="M4 7.5h16M4 12h16M4 16.5h16" />
     </svg>
   );
 }
@@ -560,7 +511,7 @@ function SunIcon({ className = "" }: { className?: string }) {
       fill="none"
       stroke="currentColor"
       strokeWidth="1.7"
-      className={`h-4 w-4 ${className}`}
+      className={`h-[15px] w-[15px] ${className}`}
       aria-hidden="true"
     >
       <circle cx="12" cy="12" r="3.5" />
@@ -589,7 +540,7 @@ function MoonIcon({ className = "" }: { className?: string }) {
       fill="none"
       stroke="currentColor"
       strokeWidth="1.7"
-      className={`h-4 w-4 ${className}`}
+      className={`h-[15px] w-[15px] ${className}`}
       aria-hidden="true"
     >
       <path
@@ -604,3 +555,4 @@ function MoonIcon({ className = "" }: { className?: string }) {
     </svg>
   );
 }
+//asddd
